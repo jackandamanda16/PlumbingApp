@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
-import { View, Text, FlatList, TextInput, Button, StyleSheet } from 'react-native';
+import { View, Text, FlatList, TextInput, Button, Image, StyleSheet } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 
 export default function FixtureIdentificationScreen() {
   const [search, setSearch] = useState('');
   const [selectedImage, setSelectedImage] = useState(null);
 
-  // Sample fixture data (replace with real data later)
+  // Sample fixture data using local images
   const fixtures = [
-    { id: '1', name: 'Sink Valve', image: 'https://via.placeholder.com/100' },
-    { id: '2', name: 'Toilet Cartridge', image: 'https://via.placeholder.com/100' },
-    { id: '3', name: 'Shower Head', image: 'https://via.placeholder.com/100' },
+    { id: '1', name: 'Delta RP46074', image: require('../assets/fixtures/delta_rp46074.png') },
+    { id: '2', name: 'Delta RP19804', image: require('../assets/fixtures/delta_rp19804.png') },
+    { id: '3', name: 'Moen Positemp 1222', image: require('../assets/fixtures/moen_1222_positemp.png') },
   ];
 
   const filteredFixtures = fixtures.filter((f) =>
@@ -42,6 +42,7 @@ export default function FixtureIdentificationScreen() {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.item}>
+            <Image source={item.image} style={styles.image} />
             <Text>{item.name}</Text>
           </View>
         )}
@@ -67,6 +68,11 @@ const styles = StyleSheet.create({
     margin: 5,
     alignItems: 'center',
     justifyContent: 'center',
-    height: 50,
+    height: 100,
+  },
+  image: {
+    width: 80,
+    height: 80,
+    marginBottom: 5,
   },
 });
