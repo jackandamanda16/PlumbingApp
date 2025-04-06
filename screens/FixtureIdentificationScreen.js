@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, FlatList, TextInput, Button, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, FlatList, TextInput, Button, Image, StyleSheet } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import SegmentedControlTab from 'react-native-segmented-control-tab'; // Import the segmented control
 
 export default function FixtureIdentificationScreen() {
   const [search, setSearch] = useState('');
   const [selectedImage, setSelectedImage] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState('Shower Cartridge'); // State for category selection
+  const [selectedCategory, setSelectedCategory] = useState('Shower Cartridge'); // State for category
 
-  // Sample fixture data using local images with category property
+  // Sample fixture data using local images
   const fixtures = [
     { id: '1', name: 'Delta RP46074', image: require('../assets/fixtures/delta_rp46074.png'), category: 'Shower Cartridge' },
     { id: '2', name: 'Delta RP19804', image: require('../assets/fixtures/delta_rp19804.png'), category: 'Shower Cartridge' },
@@ -51,6 +52,12 @@ export default function FixtureIdentificationScreen() {
     }
   };
 
+  // Handle tab selection and update selectedCategory
+  const handleCategoryChange = (index) => {
+    const categories = ['Shower Cartridge', 'Faucet Cartridge'];
+    setSelectedCategory(categories[index]);
+  };
+
   return (
     <View style={styles.container}>
       <TextInput
@@ -59,41 +66,17 @@ export default function FixtureIdentificationScreen() {
         value={search}
         onChangeText={setSearch}
       />
-      {/* Category selection buttons */}
-      <View style={styles.categoryContainer}>
-        <TouchableOpacity
-          style={[
-            styles.categoryButton,
-            selectedCategory === 'Shower Cartridge' && styles.selectedCategoryButton,
-          ]}
-          onPress={() => setSelectedCategory('Shower Cartridge')}
-        >
-          <Text
-            style={[
-              styles.categoryText,
-              selectedCategory === 'Shower Cartridge' && styles.selectedCategoryText,
-            ]}
-          >
-            Shower Cartridge
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.categoryButton,
-            selectedCategory === 'Faucet Cartridge' && styles.selectedCategoryButton,
-          ]}
-          onPress={() => setSelectedCategory('Faucet Cartridge')}
-        >
-          <Text
-            style={[
-              styles.categoryText,
-              selectedCategory === 'Faucet Cartridge' && styles.selectedCategoryText,
-            ]}
-          >
-            Faucet Cartridge
-          </Text>
-        </TouchableOpacity>
-      </View>
+      {/* Segmented Control for category selection */}
+      <SegmentedControlTab
+        values={['Shower Cartridge', 'Faucet Cartridge']}
+        selectedIndex={selectedCategory === 'Shower Cartridge' ? 0 : 1}
+        onTabPress={handleCategoryChange}
+        tabsContainerStyle={styles.tabsContainer}
+        tabStyle={styles.tabStyle}
+        activeTabStyle={styles.activeTabStyle}
+        tabTextStyle={styles.tabTextStyle}
+        activeTabTextStyle={styles.activeTabTextStyle}
+      />
       {/* Display "No Results" message if no fixtures match, otherwise show FlatList */}
       {filteredFixtures.length === 0 ? (
         <Text style={styles.noResults}>No fixtures found</Text>
@@ -125,29 +108,23 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     padding: 5,
   },
-  categoryContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+  // Styles for SegmentedControlTab
+  tabsContainer: {
     marginBottom: 10,
   },
-  categoryButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    marginHorizontal: 5,
-    borderWidth: 1,
+  tabStyle: {
     borderColor: '#ccc',
-    borderRadius: 5,
     backgroundColor: '#f0f0f0',
   },
-  selectedCategoryButton: {
+  activeTabStyle: {
     backgroundColor: '#007AFF',
     borderColor: '#007AFF',
   },
-  categoryText: {
-    fontSize: 16,
+  tabTextStyle: {
     color: '#333',
+    fontSize: 16,
   },
-  selectedCategoryText: {
+  activeTabTextStyle: {
     color: '#fff',
     fontWeight: 'bold',
   },
@@ -156,14 +133,14 @@ const styles = StyleSheet.create({
     margin: 5,
     alignItems: 'center',
     justifyContent: 'center',
-    height: 120, // Increased height to accommodate image and text
+    height: 120,
   },
   image: {
     width: 80,
     height: 80,
     marginBottom: 5,
-    borderRadius: 10, // Rounded corners for images
-    borderWidth: 1, // Add a border
+    borderRadius: 10,
+    borderWidth: 1,
     borderColor: '#ccc',
   },
   noResults: {
