@@ -9,7 +9,10 @@ export default function DashboardScreen({ navigation }) {
         title="Fixture Identification"
         onPress={() => navigation.navigate('FixtureIdentification')}
       />
-      <Button title="Troubleshooting" onPress={() => {}} />
+      <Button
+        title="Troubleshooting"
+        onPress={() => navigation.navigate('Troubleshooting')} // Updated to navigate
+      />
       <Button title="Sizing Calculators" onPress={() => {}} />
       <Button title="Code Reference" onPress={() => {}} />
     </View>
