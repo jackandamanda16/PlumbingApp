@@ -1,3 +1,5 @@
+import 'react-native-get-random-values';
+import 'web-streams-polyfill';
 import * as React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -10,6 +12,8 @@ import GasDirectVentWaterHeater from './screens/GasDirectVentWaterHeater';
 import ElectricWaterHeater from './screens/ElectricWaterHeater';
 import HybridWaterHeater from './screens/HybridWaterHeater';
 import GasTanklessWaterHeater from './screens/GasTanklessWaterHeater';
+
+console.log('ReadableStream in App.js:', typeof ReadableStream !== 'undefined');
 
 const Stack = createStackNavigator();
 

@@ -1,8 +1,12 @@
+import 'react-native-get-random-values';
+import 'react-native-url-polyfill/auto';
+import lodash from 'lodash'; // Load full Lodash
+global.lodash = lodash; // Make it globally available
 import { registerRootComponent } from 'expo';
 
 import App from './App';
 
-// registerRootComponent calls AppRegistry.registerComponent('main', () => App);
-// It also ensures that whether you load the app in Expo Go or in a native build,
-// the environment is set up appropriately
+console.log('URL polyfill loaded:', typeof URL !== 'undefined');
+console.log('Lodash loaded:', typeof lodash.extend !== 'undefined');
+
 registerRootComponent(App);
