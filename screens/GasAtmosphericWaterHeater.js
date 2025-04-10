@@ -3,6 +3,7 @@ import { View, Text, TextInput, Button, StyleSheet, Image, ScrollView } from 're
 import * as ImagePicker from 'expo-image-picker';
 import OpenAI from 'openai';
 import * as FileSystem from 'expo-file-system';
+import Constants from 'expo-constants';
 
 const openai = new OpenAI({ apiKey: Constants.expoConfig.extra.openaiApiKey });
 const CLOUDINARY_CLOUD_NAME = 'dxntxfdzr';
@@ -43,7 +44,7 @@ const GasAtmosphericWaterHeater = () => {
         );
         const data = await response.json();
         if (!response.ok) throw new Error(data.error?.message || 'Upload failed');
-        await new Promise(resolve => setTimeout(resolve, 2000)); // 2-second delay
+        await new Promise(resolve => setTimeout(resolve, 2000));
         return data.secure_url;
     };
 
