@@ -33,7 +33,7 @@ const DashboardScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: theme.colors.background,
+        backgroundColor: theme.colors.background, // White
         alignItems: 'center',
         justifyContent: 'center',
         padding: theme.spacing.large,

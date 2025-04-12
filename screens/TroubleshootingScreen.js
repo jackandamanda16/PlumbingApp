@@ -48,13 +48,15 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     button: {
-        backgroundColor: theme.colors.secondary, // Black
+        backgroundColor: theme.colors.primary, // Red
         padding: theme.spacing.medium,
         borderRadius: theme.borderRadius.medium,
         marginVertical: theme.spacing.small,
         width: '80%',
         alignItems: 'center',
         ...theme.shadow,
+        borderWidth: 1, // Subtle outline
+        borderColor: theme.colors.secondary, // Black
     },
     buttonText: {
         ...theme.typography.body,

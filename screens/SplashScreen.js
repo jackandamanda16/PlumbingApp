@@ -1,11 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { View, Image, StyleSheet } from 'react-native';
-import * as Font from 'expo-font';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
 import { theme } from '../styles/theme';
 
 const SplashScreen = ({ navigation }) => {
-    const [fontsLoaded, setFontsLoaded] = useState(false);
     const opacity = useSharedValue(0);
     const scale = useSharedValue(0.8);
 
@@ -15,39 +13,23 @@ const SplashScreen = ({ navigation }) => {
     }));
 
     useEffect(() => {
-        const loadFonts = async () => {
-            await Font.loadAsync({
-                'Exo-font': require('../assets/fonts/Exofont.ttf'),
-            });
-            setFontsLoaded(true);
-        };
-        loadFonts();
-    }, []);
+        // Fade in and scale up
+        opacity.value = withTiming(1, {
+            duration: 1000,
+            easing: Easing.out(Easing.exp),
+        });
+        scale.value = withTiming(1, {
+            duration: 1000,
+            easing: Easing.out(Easing.exp),
+        });
 
-    useEffect(() => {
-        if (fontsLoaded) {
-            // Fade in and scale up
-            opacity.value = withTiming(1, {
-                duration: 1000,
-                easing: Easing.out(Easing.exp),
-            });
-            scale.value = withTiming(1, {
-                duration: 1000,
-                easing: Easing.out(Easing.exp),
-            });
+        // Navigate to Dashboard after 3 seconds
+        const timer = setTimeout(() => {
+            navigation.replace('Dashboard');
+        }, 3000);
 
-            // Navigate to Dashboard after 3 seconds
-            const timer = setTimeout(() => {
-                navigation.replace('Dashboard');
-            }, 2500);
-
-            return () => clearTimeout(timer);
-        }
-    }, [fontsLoaded, navigation]);
-
-    if (!fontsLoaded) {
-        return null; // Wait for font to load
-    }
+        return () => clearTimeout(timer);
+    }, [navigation]);
 
     return (
         <View style={styles.container}>
@@ -73,9 +55,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     logo: {
-        width: 350,
+        width: 350, // Big and bold
         height: 350,
-        ...theme.shadow, // Adds glow-like shadow
     },
 });
 

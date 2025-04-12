@@ -1,23 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, Image, ScrollView, TouchableOpacity } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import OpenAI from 'openai';
 import * as FileSystem from 'expo-file-system';
 import Constants from 'expo-constants';
 import { theme } from '../styles/theme';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, withRepeat, withTiming, Easing } from 'react-native-reanimated';
 
 const openai = new OpenAI({ apiKey: Constants.expoConfig.extra.openaiApiKey });
-const CLOUDINARY_CLOUD_NAME = 'YOUR_CLOUD_NAME';
-const CLOUDINARY_API_KEY = 'YOUR_CLOUDINARY_API_KEY';
-const CLOUDINARY_API_SECRET = 'YOUR_CLOUDINARY_API_SECRET';
-const CLOUDINARY_UPLOAD_PRESET = 'YOUR_UPLOAD_PRESET';
+const CLOUDINARY_CLOUD_NAME = 'dxntxfdzr';
+const CLOUDINARY_API_KEY = '712146825187679';
+const CLOUDINARY_API_SECRET = 'WU-vtQj2xDmYgNFqpmieeEZc6oA';
+const CLOUDINARY_UPLOAD_PRESET = 'plumbsmartai';
 
 const GasPowerVentWaterHeater = () => {
     const [symptom, setSymptom] = useState('');
     const [modelSerial, setModelSerial] = useState('');
     const [image, setImage] = useState(null);
     const [advice, setAdvice] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
     const scalePick = useSharedValue(1);
     const scaleAdvice = useSharedValue(1);
@@ -29,6 +30,20 @@ const GasPowerVentWaterHeater = () => {
     const adviceAnimatedStyle = useAnimatedStyle(() => ({
         transform: [{ scale: scaleAdvice.value }],
     }));
+
+    const rotation = useSharedValue(0);
+    const spinAnimatedStyle = useAnimatedStyle(() => ({
+        transform: [{ rotate: `${rotation.value}deg` }],
+    }));
+
+    useEffect(() => {
+        console.log('isLoading:', isLoading);
+        if (isLoading) {
+            rotation.value = withRepeat(withTiming(360, { duration: 1200, easing: Easing.linear }), -1);
+        } else {
+            rotation.value = 0;
+        }
+    }, [isLoading]);
 
     const handlePickPressIn = () => {
         scalePick.value = withSpring(0.95);
@@ -78,6 +93,7 @@ const GasPowerVentWaterHeater = () => {
     };
 
     const fetchAIAdvice = async () => {
+        setIsLoading(true);
         try {
             let imageUrl = null;
             if (image) {
@@ -101,6 +117,8 @@ const GasPowerVentWaterHeater = () => {
         } catch (error) {
             setAdvice('Error fetching advice. Try again.');
             console.error('Cloudinary/OpenAI error:', error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -110,7 +128,7 @@ const GasPowerVentWaterHeater = () => {
                 <Text style={styles.title}>Gas Power Vent Water Heater Troubleshooting</Text>
                 <TextInput
                     style={styles.input}
-                    placeholder="Enter symptom (e.g., red light blinking 4 times)"
+                    placeholder="Enter symptom (e.g., fan not running)"
                     value={symptom}
                     onChangeText={setSymptom}
                 />
@@ -139,7 +157,17 @@ const GasPowerVentWaterHeater = () => {
                         <Text style={styles.buttonText}>Get AI Advice</Text>
                     </TouchableOpacity>
                 </Animated.View>
-                {advice ? <Text style={styles.advice}>{advice}</Text> : null}
+                {isLoading ? (
+                    <Animated.View style={[styles.loadingContainer, spinAnimatedStyle]}>
+                        <Image
+                            source={require('../assets/Logo-NoText.png')} // Updated file
+                            style={styles.loadingLogo}
+                            resizeMode="contain"
+                        />
+                    </Animated.View>
+                ) : advice ? (
+                    <Text style={styles.advice}>{advice}</Text>
+                ) : null}
             </View>
         </ScrollView>
     );
@@ -155,7 +183,7 @@ const styles = StyleSheet.create({
     },
     title: {
         ...theme.typography.title,
-        color: theme.colors.primary,
+        color: theme.colors.primary, // Logo red (#C04343)
         marginBottom: theme.spacing.large,
     },
     input: {
@@ -175,7 +203,7 @@ const styles = StyleSheet.create({
         borderRadius: theme.borderRadius.medium,
     },
     button: {
-        backgroundColor: theme.colors.accent,
+        backgroundColor: theme.colors.accent, // Logo red (#C04343)
         padding: theme.spacing.medium,
         borderRadius: theme.borderRadius.medium,
         marginVertical: theme.spacing.small,
@@ -184,12 +212,20 @@ const styles = StyleSheet.create({
     },
     buttonText: {
         ...theme.typography.body,
-        color: theme.colors.textSecondary,
+        color: theme.colors.textSecondary, // White
     },
     advice: {
         ...theme.typography.body,
         marginTop: theme.spacing.large,
-        color: theme.colors.text,
+        color: theme.colors.text, // Black
+    },
+    loadingContainer: {
+        marginTop: theme.spacing.large,
+        alignItems: 'center',
+    },
+    loadingLogo: {
+        width: 60, // Smaller brain logo
+        height: 60,
     },
 });
 
