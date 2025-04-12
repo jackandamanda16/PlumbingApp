@@ -1,9 +1,11 @@
-import React, { useEffect } from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Image, StyleSheet } from 'react-native';
+import * as Font from 'expo-font';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
 import { theme } from '../styles/theme';
 
 const SplashScreen = ({ navigation }) => {
+    const [fontsLoaded, setFontsLoaded] = useState(false);
     const opacity = useSharedValue(0);
     const scale = useSharedValue(0.8);
 
@@ -13,23 +15,39 @@ const SplashScreen = ({ navigation }) => {
     }));
 
     useEffect(() => {
-        // Fade in and scale up
-        opacity.value = withTiming(1, {
-            duration: 1000,
-            easing: Easing.out(Easing.exp),
-        });
-        scale.value = withTiming(1, {
-            duration: 1000,
-            easing: Easing.out(Easing.exp),
-        });
+        const loadFonts = async () => {
+            await Font.loadAsync({
+                'Exo-font': require('../assets/fonts/Exofont.ttf'),
+            });
+            setFontsLoaded(true);
+        };
+        loadFonts();
+    }, []);
 
-        // Navigate to Dashboard after 3 seconds
-        const timer = setTimeout(() => {
-            navigation.replace('Dashboard');
-        }, 3000);
+    useEffect(() => {
+        if (fontsLoaded) {
+            // Fade in and scale up
+            opacity.value = withTiming(1, {
+                duration: 1000,
+                easing: Easing.out(Easing.exp),
+            });
+            scale.value = withTiming(1, {
+                duration: 1000,
+                easing: Easing.out(Easing.exp),
+            });
 
-        return () => clearTimeout(timer);
-    }, [navigation]);
+            // Navigate to Dashboard after 3 seconds
+            const timer = setTimeout(() => {
+                navigation.replace('Dashboard');
+            }, 3000);
+
+            return () => clearTimeout(timer);
+        }
+    }, [fontsLoaded, navigation]);
+
+    if (!fontsLoaded) {
+        return null; // Wait for font to load
+    }
 
     return (
         <View style={styles.container}>
@@ -39,7 +57,6 @@ const SplashScreen = ({ navigation }) => {
                     style={styles.logo}
                     resizeMode="contain"
                 />
-                <Text style={styles.text}>Plumbing Reimagined</Text>
             </Animated.View>
         </View>
     );
@@ -56,16 +73,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     logo: {
-        width: 250,
-        height: 250,
-        marginBottom: theme.spacing.large,
-    },
-    text: {
-        ...theme.typography.title,
-        color: theme.colors.primary, // Red
-        fontSize: 28,
-        fontWeight: '900',
-        textAlign: 'center',
+        width: 350, // Big and bold
+        height: 350,
     },
 });
 
