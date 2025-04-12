@@ -1,8 +1,11 @@
 import * as React from 'react';
+import { useState, useEffect } from 'react';
+import { View, StyleSheet } from 'react-native';
+import * as Font from 'expo-font';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { TransitionPresets } from '@react-navigation/stack';
-import { theme } from './styles/theme'; // Add this import
+import { theme } from './styles/theme';
 import SplashScreen from './screens/SplashScreen';
 import DashboardScreen from './screens/DashboardScreen';
 import FixtureIdentificationScreen from './screens/FixtureIdentificationScreen';
@@ -16,7 +19,23 @@ import GasTanklessWaterHeater from './screens/GasTanklessWaterHeater';
 
 const Stack = createStackNavigator();
 
-export default function App() {
+const App = () => {
+    const [fontsLoaded, setFontsLoaded] = useState(false);
+
+    useEffect(() => {
+        const loadFonts = async () => {
+            await Font.loadAsync({
+                'Exo-font': require('./assets/fonts/Exofont.ttf'),
+            });
+            setFontsLoaded(true);
+        };
+        loadFonts();
+    }, []);
+
+    if (!fontsLoaded) {
+        return <View style={styles.loadingContainer} />;
+    }
+
     return (
         <NavigationContainer>
             <Stack.Navigator
@@ -29,6 +48,7 @@ export default function App() {
                     headerTintColor: theme.colors.textSecondary, // White
                     headerTitleStyle: {
                         fontWeight: 'bold',
+                        fontFamily: 'Exo-font', // Apply Exo font
                     },
                 }}
             >
@@ -53,4 +73,13 @@ export default function App() {
             </Stack.Navigator>
         </NavigationContainer>
     );
-}
+};
+
+const styles = StyleSheet.create({
+    loadingContainer: {
+        flex: 1,
+        backgroundColor: theme.colors.background, // White
+    },
+});
+
+export default App;

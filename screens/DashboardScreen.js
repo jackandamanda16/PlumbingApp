@@ -13,8 +13,7 @@ const DashboardScreen = () => {
                 style={styles.logo}
                 resizeMode="contain"
             />
-            <Text style={styles.title}>Efficency Reimagined</Text>
-            <Text style={styles.subtitle}>Solve plumbing issues with ease</Text>
+            <Text style={styles.title}>Plumbing Reimagined</Text>
             <TouchableOpacity
                 style={styles.button}
                 onPress={() => navigation.navigate('Troubleshooting')}
@@ -34,7 +33,7 @@ const DashboardScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: theme.colors.background, // White
+        backgroundColor: theme.colors.background,
         alignItems: 'center',
         justifyContent: 'center',
         padding: theme.spacing.large,
@@ -70,7 +69,6 @@ const styles = StyleSheet.create({
     buttonText: {
         ...theme.typography.body,
         color: theme.colors.textSecondary, // White
-        fontWeight: 'bold',
     },
 });
 

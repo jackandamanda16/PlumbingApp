@@ -35,7 +35,7 @@ const TroubleshootingScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: theme.colors.background, // White
+        backgroundColor: theme.colors.background,
         padding: theme.spacing.large,
     },
     title: {
@@ -59,7 +59,6 @@ const styles = StyleSheet.create({
     buttonText: {
         ...theme.typography.body,
         color: theme.colors.textSecondary, // White
-        fontWeight: 'bold',
     },
 });
 

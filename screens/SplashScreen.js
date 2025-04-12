@@ -39,7 +39,7 @@ const SplashScreen = ({ navigation }) => {
             // Navigate to Dashboard after 3 seconds
             const timer = setTimeout(() => {
                 navigation.replace('Dashboard');
-            }, 3000);
+            }, 2500);
 
             return () => clearTimeout(timer);
         }
@@ -73,8 +73,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     logo: {
-        width: 350, // Big and bold
+        width: 350,
         height: 350,
+        ...theme.shadow, // Adds glow-like shadow
     },
 });
 

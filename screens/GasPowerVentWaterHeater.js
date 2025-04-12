@@ -8,10 +8,10 @@ import { theme } from '../styles/theme';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 
 const openai = new OpenAI({ apiKey: Constants.expoConfig.extra.openaiApiKey });
-const CLOUDINARY_CLOUD_NAME = 'dxntxfdzr';
-const CLOUDINARY_API_KEY = '712146825187679';
-const CLOUDINARY_API_SECRET = 'WU-vtQj2xDmYgNFqpmieeEZc6oA';
-const CLOUDINARY_UPLOAD_PRESET = 'plumbsmartai';
+const CLOUDINARY_CLOUD_NAME = 'YOUR_CLOUD_NAME';
+const CLOUDINARY_API_KEY = 'YOUR_CLOUDINARY_API_KEY';
+const CLOUDINARY_API_SECRET = 'YOUR_CLOUDINARY_API_SECRET';
+const CLOUDINARY_UPLOAD_PRESET = 'YOUR_UPLOAD_PRESET';
 
 const GasPowerVentWaterHeater = () => {
     const [symptom, setSymptom] = useState('');
@@ -19,23 +19,34 @@ const GasPowerVentWaterHeater = () => {
     const [image, setImage] = useState(null);
     const [advice, setAdvice] = useState('');
 
-    const scale = useSharedValue(1);
-    const animatedStyle = useAnimatedStyle(() => ({
-        transform: [{ scale: scale.value }],
+    const scalePick = useSharedValue(1);
+    const scaleAdvice = useSharedValue(1);
+
+    const pickAnimatedStyle = useAnimatedStyle(() => ({
+        transform: [{ scale: scalePick.value }],
     }));
 
-    const handlePressIn = () => {
-        console.log('Press In: Pick Image');
-        scale.value = withSpring(0.95);
+    const adviceAnimatedStyle = useAnimatedStyle(() => ({
+        transform: [{ scale: scaleAdvice.value }],
+    }));
+
+    const handlePickPressIn = () => {
+        scalePick.value = withSpring(0.95);
     };
 
-    const handlePressOut = () => {
-        console.log('Press Out: Pick Image');
-        scale.value = withSpring(1);
+    const handlePickPressOut = () => {
+        scalePick.value = withSpring(1);
+    };
+
+    const handleAdvicePressIn = () => {
+        scaleAdvice.value = withSpring(0.95);
+    };
+
+    const handleAdvicePressOut = () => {
+        scaleAdvice.value = withSpring(1);
     };
 
     const pickImage = async () => {
-        console.log('pickImage called');
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
@@ -47,7 +58,6 @@ const GasPowerVentWaterHeater = () => {
     };
 
     const uploadImageToCloudinary = async (uri) => {
-        console.log('uploadImageToCloudinary called');
         const file = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' });
         const formData = new FormData();
         formData.append('file', `data:image/jpeg;base64,${file}`);
@@ -68,7 +78,6 @@ const GasPowerVentWaterHeater = () => {
     };
 
     const fetchAIAdvice = async () => {
-        console.log('fetchAIAdvice called');
         try {
             let imageUrl = null;
             if (image) {
@@ -111,19 +120,25 @@ const GasPowerVentWaterHeater = () => {
                     value={modelSerial}
                     onChangeText={setModelSerial}
                 />
-                <Animated.View style={[styles.button, animatedStyle]}>
+                <Animated.View style={[styles.button, pickAnimatedStyle]}>
                     <TouchableOpacity
-                        onPressIn={handlePressIn}
-                        onPressOut={handlePressOut}
+                        onPressIn={handlePickPressIn}
+                        onPressOut={handlePickPressOut}
                         onPress={pickImage}
                     >
                         <Text style={styles.buttonText}>Pick Image</Text>
                     </TouchableOpacity>
                 </Animated.View>
                 {image && <Image source={{ uri: image }} style={styles.image} />}
-                <TouchableOpacity style={styles.button} onPress={fetchAIAdvice}>
-                    <Text style={styles.buttonText}>Get AI Advice</Text>
-                </TouchableOpacity>
+                <Animated.View style={[styles.button, adviceAnimatedStyle]}>
+                    <TouchableOpacity
+                        onPressIn={handleAdvicePressIn}
+                        onPressOut={handleAdvicePressOut}
+                        onPress={fetchAIAdvice}
+                    >
+                        <Text style={styles.buttonText}>Get AI Advice</Text>
+                    </TouchableOpacity>
+                </Animated.View>
                 {advice ? <Text style={styles.advice}>{advice}</Text> : null}
             </View>
         </ScrollView>
@@ -170,7 +185,6 @@ const styles = StyleSheet.create({
     buttonText: {
         ...theme.typography.body,
         color: theme.colors.textSecondary,
-        fontWeight: 'bold',
     },
     advice: {
         ...theme.typography.body,
