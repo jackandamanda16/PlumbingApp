@@ -1,27 +1,27 @@
 export const theme = {
     colors: {
-        primary: '#FF0000', // Red
+        primary: '#C04343', // Logo red
         secondary: '#000000', // Black
         background: '#FFFFFF', // White
         text: '#000000', // Black
         textSecondary: '#FFFFFF', // White
-        accent: '#CC0000', // Softer red
+        accent: '#C04343', // Logo red (same as primary for consistency)
         border: '#CCCCCC', // Light gray
     },
     typography: {
         title: {
             fontSize: 24,
-            fontFamily: 'Exo-font', // Futuristic
+            fontFamily: 'Exo-Regular',
             color: '#000000',
         },
         subtitle: {
             fontSize: 18,
-            fontFamily: 'Exo-font',
+            fontFamily: 'Exo-Regular',
             color: '#000000',
         },
         body: {
             fontSize: 16,
-            fontFamily: 'Exo-font',
+            fontFamily: 'Exo-Regular',
             color: '#000000',
             lineHeight: 24,
         },
