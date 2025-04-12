@@ -11,7 +11,7 @@ const openai = new OpenAI({ apiKey: Constants.expoConfig.extra.openaiApiKey });
 const CLOUDINARY_CLOUD_NAME = 'dxntxfdzr';
 const CLOUDINARY_API_KEY = '712146825187679';
 const CLOUDINARY_API_SECRET = 'WU-vtQj2xDmYgNFqpmieeEZc6oA';
-const CLOUDINARY_UPLOAD_PRESET = 'plumbsmartaiT';
+const CLOUDINARY_UPLOAD_PRESET = 'plumbsmartai';
 
 const GasAtmosphericWaterHeater = () => {
     const [symptom, setSymptom] = useState('');
@@ -19,34 +19,23 @@ const GasAtmosphericWaterHeater = () => {
     const [image, setImage] = useState(null);
     const [advice, setAdvice] = useState('');
 
-    const scalePick = useSharedValue(1);
-    const scaleAdvice = useSharedValue(1);
-
-    const pickAnimatedStyle = useAnimatedStyle(() => ({
-        transform: [{ scale: scalePick.value }],
+    const scale = useSharedValue(1);
+    const animatedStyle = useAnimatedStyle(() => ({
+        transform: [{ scale: scale.value }],
     }));
 
-    const adviceAnimatedStyle = useAnimatedStyle(() => ({
-        transform: [{ scale: scaleAdvice.value }],
-    }));
-
-    const handlePickPressIn = () => {
-        scalePick.value = withSpring(0.95);
+    const handlePressIn = () => {
+        console.log('Press In: Pick Image');
+        scale.value = withSpring(0.95);
     };
 
-    const handlePickPressOut = () => {
-        scalePick.value = withSpring(1);
-    };
-
-    const handleAdvicePressIn = () => {
-        scaleAdvice.value = withSpring(0.95);
-    };
-
-    const handleAdvicePressOut = () => {
-        scaleAdvice.value = withSpring(1);
+    const handlePressOut = () => {
+        console.log('Press Out: Pick Image');
+        scale.value = withSpring(1);
     };
 
     const pickImage = async () => {
+        console.log('pickImage called');
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
@@ -58,6 +47,7 @@ const GasAtmosphericWaterHeater = () => {
     };
 
     const uploadImageToCloudinary = async (uri) => {
+        console.log('uploadImageToCloudinary called');
         const file = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' });
         const formData = new FormData();
         formData.append('file', `data:image/jpeg;base64,${file}`);
@@ -78,6 +68,7 @@ const GasAtmosphericWaterHeater = () => {
     };
 
     const fetchAIAdvice = async () => {
+        console.log('fetchAIAdvice called');
         try {
             let imageUrl = null;
             if (image) {
@@ -120,25 +111,19 @@ const GasAtmosphericWaterHeater = () => {
                     value={modelSerial}
                     onChangeText={setModelSerial}
                 />
-                <Animated.View style={[styles.button, pickAnimatedStyle]}>
+                <Animated.View style={[styles.button, animatedStyle]}>
                     <TouchableOpacity
-                        onPressIn={handlePickPressIn}
-                        onPressOut={handlePickPressOut}
+                        onPressIn={handlePressIn}
+                        onPressOut={handlePressOut}
                         onPress={pickImage}
                     >
                         <Text style={styles.buttonText}>Pick Image</Text>
                     </TouchableOpacity>
                 </Animated.View>
                 {image && <Image source={{ uri: image }} style={styles.image} />}
-                <Animated.View style={[styles.button, adviceAnimatedStyle]}>
-                    <TouchableOpacity
-                        onPressIn={handleAdvicePressIn}
-                        onPressOut={handleAdvicePressOut}
-                        onPress={fetchAIAdvice}
-                    >
-                        <Text style={styles.buttonText}>Get AI Advice</Text>
-                    </TouchableOpacity>
-                </Animated.View>
+                <TouchableOpacity style={styles.button} onPress={fetchAIAdvice}>
+                    <Text style={styles.buttonText}>Get AI Advice</Text>
+                </TouchableOpacity>
                 {advice ? <Text style={styles.advice}>{advice}</Text> : null}
             </View>
         </ScrollView>
