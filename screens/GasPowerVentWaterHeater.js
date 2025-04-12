@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Image, ScrollView } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Image, ScrollView, TouchableOpacity } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import OpenAI from 'openai';
 import * as FileSystem from 'expo-file-system';
 import Constants from 'expo-constants';
+import { theme } from '../styles/theme';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 
 const openai = new OpenAI({ apiKey: Constants.expoConfig.extra.openaiApiKey });
 const CLOUDINARY_CLOUD_NAME = 'dxntxfdzr';
@@ -17,7 +19,23 @@ const GasPowerVentWaterHeater = () => {
     const [image, setImage] = useState(null);
     const [advice, setAdvice] = useState('');
 
+    const scale = useSharedValue(1);
+    const animatedStyle = useAnimatedStyle(() => ({
+        transform: [{ scale: scale.value }],
+    }));
+
+    const handlePressIn = () => {
+        console.log('Press In: Pick Image');
+        scale.value = withSpring(0.95);
+    };
+
+    const handlePressOut = () => {
+        console.log('Press Out: Pick Image');
+        scale.value = withSpring(1);
+    };
+
     const pickImage = async () => {
+        console.log('pickImage called');
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
@@ -29,6 +47,7 @@ const GasPowerVentWaterHeater = () => {
     };
 
     const uploadImageToCloudinary = async (uri) => {
+        console.log('uploadImageToCloudinary called');
         const file = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' });
         const formData = new FormData();
         formData.append('file', `data:image/jpeg;base64,${file}`);
@@ -49,6 +68,7 @@ const GasPowerVentWaterHeater = () => {
     };
 
     const fetchAIAdvice = async () => {
+        console.log('fetchAIAdvice called');
         try {
             let imageUrl = null;
             if (image) {
@@ -91,9 +111,19 @@ const GasPowerVentWaterHeater = () => {
                     value={modelSerial}
                     onChangeText={setModelSerial}
                 />
-                <Button title="Pick Image" onPress={pickImage} />
+                <Animated.View style={[styles.button, animatedStyle]}>
+                    <TouchableOpacity
+                        onPressIn={handlePressIn}
+                        onPressOut={handlePressOut}
+                        onPress={pickImage}
+                    >
+                        <Text style={styles.buttonText}>Pick Image</Text>
+                    </TouchableOpacity>
+                </Animated.View>
                 {image && <Image source={{ uri: image }} style={styles.image} />}
-                <Button title="Get AI Advice" onPress={fetchAIAdvice} />
+                <TouchableOpacity style={styles.button} onPress={fetchAIAdvice}>
+                    <Text style={styles.buttonText}>Get AI Advice</Text>
+                </TouchableOpacity>
                 {advice ? <Text style={styles.advice}>{advice}</Text> : null}
             </View>
         </ScrollView>
@@ -103,34 +133,49 @@ const GasPowerVentWaterHeater = () => {
 const styles = StyleSheet.create({
     scrollContainer: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: theme.colors.background,
     },
     contentContainer: {
-        padding: 20,
+        padding: theme.spacing.large,
     },
     title: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 15,
+        ...theme.typography.title,
+        color: theme.colors.primary,
+        marginBottom: theme.spacing.large,
     },
     input: {
         borderWidth: 1,
-        borderColor: '#ccc',
-        padding: 10,
-        borderRadius: 5,
-        marginBottom: 10,
+        borderColor: theme.colors.border,
+        padding: theme.spacing.medium,
+        borderRadius: theme.borderRadius.medium,
+        marginBottom: theme.spacing.medium,
+        backgroundColor: theme.colors.background,
+        ...theme.typography.body,
     },
     image: {
         width: 200,
         height: 200,
-        marginVertical: 10,
+        marginVertical: theme.spacing.medium,
         alignSelf: 'center',
+        borderRadius: theme.borderRadius.medium,
+    },
+    button: {
+        backgroundColor: theme.colors.accent,
+        padding: theme.spacing.medium,
+        borderRadius: theme.borderRadius.medium,
+        marginVertical: theme.spacing.small,
+        alignItems: 'center',
+        ...theme.shadow,
+    },
+    buttonText: {
+        ...theme.typography.body,
+        color: theme.colors.textSecondary,
+        fontWeight: 'bold',
     },
     advice: {
-        marginTop: 15,
-        fontSize: 16,
-        color: '#333',
-        lineHeight: 24,
+        ...theme.typography.body,
+        marginTop: theme.spacing.large,
+        color: theme.colors.text,
     },
 });
 
