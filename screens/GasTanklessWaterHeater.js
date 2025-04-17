@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
     },
     buttonText: {
         ...theme.typography.body,
-        color: theme.colors.textSecondary, // White
+        color: theme.colors.red, // Red
     },
     advice: {
         ...theme.typography.body,
