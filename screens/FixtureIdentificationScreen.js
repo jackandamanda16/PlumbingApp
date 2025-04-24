@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Linking, TextInput, ScrollView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as Location from 'expo-location';
 import { theme } from '../styles/theme';
 
 const FixtureIdentificationScreen = () => {
@@ -9,6 +10,20 @@ const FixtureIdentificationScreen = () => {
   const [result, setResult] = useState(null);
   const [feedback, setFeedback] = useState('');
   const [userModelNumber, setUserModelNumber] = useState('');
+  const [location, setLocation] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        console.log('Permission to access location denied');
+        return;
+      }
+
+      let loc = await Location.getCurrentPositionAsync({});
+      setLocation(loc);
+    })();
+  }, []);
 
   const pickImage = async () => {
     try {
@@ -109,7 +124,21 @@ const FixtureIdentificationScreen = () => {
         alert('No match found. Try another photo or submit the model number manually.');
         setResult({ imageUrl: data.imageUrl });
       } else {
-        setResult(data);
+        // Add location-based purchase links
+        const locationLinks = location ? [
+          {
+            name: 'Home Depot (Nearby)',
+            url: `https://www.homedepot.com/s/${data.modelNumber}?lat=${location.coords.latitude}&lon=${location.coords.longitude}`
+          },
+          {
+            name: "Lowe's (Nearby)",
+            url: `https://www.lowes.com/search?searchTerm=${data.modelNumber}&lat=${location.coords.latitude}&lon=${location.coords.longitude}`
+          }
+        ] : [];
+        setResult({
+          ...data,
+          purchaseLinks: [...data.purchaseLinks, ...locationLinks]
+        });
       }
     } catch (error) {
       console.error('Fetch error:', error);
