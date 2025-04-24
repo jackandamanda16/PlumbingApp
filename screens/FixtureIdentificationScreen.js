@@ -1,152 +1,392 @@
 import React, { useState } from 'react';
-import { View, Text, FlatList, TextInput, Button, Image, StyleSheet } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import SegmentedControlTab from 'react-native-segmented-control-tab'; // Import the segmented control
+     import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Linking, TextInput } from 'react-native';
+     import * as ImagePicker from 'expo-image-picker';
+     import { theme } from '../styles/theme';
 
-export default function FixtureIdentificationScreen() {
-  const [search, setSearch] = useState('');
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState('Shower Cartridge'); // State for category
+     const FixtureIdentificationScreen = () => {
+       const [image, setImage] = useState(null);
+       const [loading, setLoading] = useState(false);
+       const [result, setResult] = useState(null);
+       const [feedback, setFeedback] = useState('');
+       const [userModelNumber, setUserModelNumber] = useState('');
 
-  // Sample fixture data using local images
-  const fixtures = [
-    { id: '1', name: 'Delta RP46074', image: require('../assets/fixtures/delta_rp46074.png'), category: 'Shower Cartridge' },
-    { id: '2', name: 'Delta RP19804', image: require('../assets/fixtures/delta_rp19804.png'), category: 'Shower Cartridge' },
-    { id: '3', name: 'Moen Positemp 1222', image: require('../assets/fixtures/moen_1222_positemp.png'), category: 'Shower Cartridge' },
-    { id: '4', name: 'Moen 1200', image: require('../assets/fixtures/moen_1200.png'), category: 'Shower Cartridge' },
-    { id: '5', name: 'Moen 1225', image: require('../assets/fixtures/moen_1225.png'), category: 'Shower Cartridge' },
-    { id: '6', name: 'Delta RP1991', image: require('../assets/fixtures/delta_rp1991.png'), category: 'Shower Cartridge' },
-    { id: '7', name: 'Delta RP32104', image: require('../assets/fixtures/delta_rp32104.png'), category: 'Shower Cartridge' },
-    { id: '8', name: 'Delta RP46463', image: require('../assets/fixtures/delta_rp46463.png'), category: 'Shower Cartridge' },
-    { id: '9', name: 'Delta RP47201', image: require('../assets/fixtures/delta_rp47201.png'), category: 'Shower Cartridge' },
-    { id: '10', name: 'Grohe Thermostatic', image: require('../assets/fixtures/grohe_47582000.png'), category: 'Shower Cartridge' },
-    { id: '11', name: 'Kohler 800881', image: require('../assets/fixtures/kohler_800881.png'), category: 'Shower Cartridge' },
-    { id: '12', name: 'Kohler 1021119', image: require('../assets/fixtures/kohler_1021119.png'), category: 'Shower Cartridge' },
-    { id: '13', name: 'Kohler GP800820', image: require('../assets/fixtures/kohler_gp800820.png'), category: 'Shower Cartridge' },
-    { id: '14', name: 'Kohler GP876851', image: require('../assets/fixtures/kohler_gp876851.png'), category: 'Shower Cartridge' },
-    { id: '15', name: 'Kohler GP114492', image: require('../assets/fixtures/kohler_gp1144925.png'), category: 'Shower Cartridge' },
-    { id: '16', name: 'Kohler K1046104', image: require('../assets/fixtures/kohler_k1046104.png'), category: 'Shower Cartridge' },
-    { id: '17', name: 'Kohler K1145688', image: require('../assets/fixtures/kohler_K1145688.png'), category: 'Shower Cartridge' },
-    { id: '18', name: 'Delta RP50587', image: require('../assets/fixtures/delta_rp50587.png'), category: 'Faucet Cartridge' },
-    { id: '19', name: 'Moen 1224', image: require('../assets/fixtures/moen_1224.png'), category: 'Faucet Cartridge' },
-    { id: '20', name: 'Moen 1248', image: require('../assets/fixtures/moen_1248.png'), category: 'Faucet Cartridge' },
-    { id: '21', name: 'Moen 4000r', image: require('../assets/fixtures/moen_4000r.png'), category: 'Faucet Cartridge' },
-    { id: '22', name: 'Moen 130157', image: require('../assets/fixtures/moen_130157.png'), category: 'Faucet Cartridge' },
-    { id: '23', name: 'Moen 163127', image: require('../assets/fixtures/moen_163127.png'), category: 'Faucet Cartridge' },
-  ];
+       const pickImage = async () => {
+         try {
+           const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+           console.log('Media library permission status:', status);
+           if (status !== 'granted') {
+             alert('Sorry, we need media library permissions to make this work!');
+             return;
+           }
 
-  // Filter fixtures based on both search term and selected category
-  const filteredFixtures = fixtures.filter((f) =>
-    f.name.toLowerCase().includes(search.toLowerCase()) && f.category === selectedCategory
-  );
+           let result = await ImagePicker.launchImageLibraryAsync({
+             mediaTypes: ['images'], // Fixed from [ImagePicker.MediaType.images]
+             allowsEditing: true,
+             quality: 1,
+           });
 
-  const pickImage = async () => {
-    let result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      quality: 1,
-    });
+           console.log('Image picker result:', result);
 
-    if (!result.canceled) {
-      setSelectedImage(result.assets[0].uri);
-      // Add AI logic here later (e.g., upload to AWS Rekognition)
-    }
-  };
+           if (!result.canceled) {
+             setImage(result.assets[0].uri);
+             setResult(null);
+             setFeedback('');
+             setUserModelNumber('');
+           }
+         } catch (error) {
+           console.error('Error in pickImage:', error);
+           alert('Error accessing media library: ' + error.message);
+         }
+       };
 
-  // Handle tab selection and update selectedCategory
-  const handleCategoryChange = (index) => {
-    const categories = ['Shower Cartridge', 'Faucet Cartridge'];
-    setSelectedCategory(categories[index]);
-  };
+       const takePhoto = async () => {
+         try {
+           const { status } = await ImagePicker.requestCameraPermissionsAsync();
+           console.log('Camera permission status:', status);
+           if (status !== 'granted') {
+             alert('Sorry, we need camera permissions to make this work!');
+             return;
+           }
 
-  return (
-    <View style={styles.container}>
-      <TextInput
-        style={styles.searchBar}
-        placeholder="Search fixtures..."
-        value={search}
-        onChangeText={setSearch}
-      />
-      {/* Segmented Control for category selection */}
-      <SegmentedControlTab
-        values={['Shower Cartridge', 'Faucet Cartridge']}
-        selectedIndex={selectedCategory === 'Shower Cartridge' ? 0 : 1}
-        onTabPress={handleCategoryChange}
-        tabsContainerStyle={styles.tabsContainer}
-        tabStyle={styles.tabStyle}
-        activeTabStyle={styles.activeTabStyle}
-        tabTextStyle={styles.tabTextStyle}
-        activeTabTextStyle={styles.activeTabTextStyle}
-      />
-      {/* Display "No Results" message if no fixtures match, otherwise show FlatList */}
-      {filteredFixtures.length === 0 ? (
-        <Text style={styles.noResults}>No fixtures found</Text>
-      ) : (
-        <FlatList
-          data={filteredFixtures}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <View style={styles.item}>
-              <Image source={item.image} style={styles.image} />
-              <Text>{item.name}</Text>
-            </View>
-          )}
-          numColumns={2}
-        />
-      )}
-      <Button title="Take Photo" onPress={pickImage} />
-      {selectedImage && <Text>Image selected: {selectedImage}</Text>}
-    </View>
-  );
-}
+           let result = await ImagePicker.launchCameraAsync({
+             mediaTypes: ['images'], // Fixed from [ImagePicker.MediaType.images]
+             allowsEditing: true,
+             quality: 1,
+           });
 
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 10 },
-  searchBar: {
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    marginBottom: 10,
-    padding: 5,
-  },
-  // Styles for SegmentedControlTab
-  tabsContainer: {
-    marginBottom: 10,
-  },
-  tabStyle: {
-    borderColor: '#ccc',
-    backgroundColor: '#f0f0f0',
-  },
-  activeTabStyle: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
-  },
-  tabTextStyle: {
-    color: '#333',
-    fontSize: 16,
-  },
-  activeTabTextStyle: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  item: {
-    flex: 1,
-    margin: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 120,
-  },
-  image: {
-    width: 80,
-    height: 80,
-    marginBottom: 5,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#ccc',
-  },
-  noResults: {
-    textAlign: 'center',
-    marginTop: 20,
-    fontSize: 16,
-    color: '#666',
-  },
-});
+           console.log('Camera result:', result);
+
+           if (!result.canceled) {
+             setImage(result.assets[0].uri);
+             setResult(null);
+             setFeedback('');
+             setUserModelNumber('');
+           }
+         } catch (error) {
+           console.error('Error in takePhoto:', error);
+           alert('Error accessing camera: ' + error.message);
+         }
+       };
+
+       const searchFixture = async () => {
+        if (!image) {
+          alert('Please upload or take a photo first!');
+          return;
+        }
+    
+        setLoading(true);
+        try {
+          const formData = new FormData();
+          const extension = image.toLowerCase().endsWith('.png') ? 'png' : 'jpg';
+          const mimeType = extension === 'png' ? 'image/png' : 'image/jpeg';
+          formData.append('photo', {
+            uri: image,
+            name: `fixture.${extension}`,
+            type: mimeType,
+          });
+    
+          console.log('Sending request to: https://plumbsmartai-backend-efcaac9e4486.herokuapp.com/identify');
+          console.log('Image URI:', image);
+    
+          const response = await fetch('https://plumbsmartai-backend-efcaac9e4486.herokuapp.com/identify', {
+            method: 'POST',
+            body: formData,
+          });
+    
+          console.log('Response status:', response.status);
+    
+          const contentType = response.headers.get('content-type');
+          if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            console.error('Non-JSON response:', text.substring(0, 200));
+            throw new Error(`Server returned non-JSON response (status: ${response.status}): ${text.substring(0, 100)}`);
+          }
+    
+          const data = await response.json();
+          console.log('Response data:', data);
+    
+          if (data.error) {
+            alert('No match found. Try another photo or submit the model number manually.');
+            setResult({ imageUrl: data.imageUrl });
+          } else {
+            setResult(data);
+          }
+        } catch (error) {
+          console.error('Fetch error:', error);
+          alert('Error identifying fixture: ' + error.message);
+        }
+        setLoading(false);
+      };
+
+       const submitFeedback = async (isCorrect, modelNumber) => {
+         if (!image || (!isCorrect && !modelNumber)) {
+           alert('Please provide a model number for incorrect matches.');
+           return;
+         }
+
+         setLoading(true);
+         try {
+           const formData = new FormData();
+           formData.append('photo', {
+             uri: image,
+             name: 'fixture.jpg',
+             type: 'image/jpeg',
+           });
+           formData.append('modelNumber', isCorrect ? result.modelNumber : modelNumber);
+
+           console.log('Submitting feedback to: https://plumbsmartai-backend.herokuapp.com/submit');
+           const response = await fetch('https://plumbsmartai-backend.herokuapp.com/submit', {
+             method: 'POST',
+             body: formData,
+           });
+
+           console.log('Feedback response status:', response.status);
+           const data = await response.json();
+           console.log('Feedback response data:', data);
+
+           if (data.status === 'success') {
+             setFeedback('Thanks for your feedback!');
+             setUserModelNumber('');
+           } else {
+             throw new Error('Feedback submission failed');
+           }
+         } catch (error) {
+           console.error('Feedback error:', error);
+           alert('Error submitting feedback: ' + error.message);
+         }
+         setLoading(false);
+       };
+
+       return (
+         <View style={styles.container}>
+           <Image
+             source={require('../assets/logo.png')}
+             style={styles.logo}
+             resizeMode="contain"
+           />
+           <Text style={styles.title}>Identify Fixture</Text>
+           <View style={styles.buttonRow}>
+             <TouchableOpacity style={styles.button} onPress={pickImage}>
+               <Text style={styles.buttonText}>Upload Photo</Text>
+             </TouchableOpacity>
+             <TouchableOpacity style={styles.button} onPress={takePhoto}>
+               <Text style={styles.buttonText}>Take Photo</Text>
+             </TouchableOpacity>
+           </View>
+           {image && (
+             <Image source={{ uri: image }} style={styles.uploadedImage} />
+           )}
+           <TouchableOpacity
+             style={[styles.button, !image || loading ? styles.buttonDisabled : {}]}
+             onPress={searchFixture}
+             disabled={!image || loading}
+           >
+             <Text style={styles.buttonText}>Search</Text>
+           </TouchableOpacity>
+           {loading && (
+             <ActivityIndicator size="large" color={theme.colors.red} style={styles.loader} />
+           )}
+           {result && (
+             <View style={styles.resultContainer}>
+               <Text style={styles.resultTitle}>Result:</Text>
+               {result.modelNumber ? (
+                 <>
+                   <Image source={{ uri: result.imageUrl }} style={styles.resultImage} />
+                   <Text style={styles.resultText}>Model: {result.modelNumber}</Text>
+                   <Text style={styles.resultText}>Probability: {(result.probability * 100).toFixed(2)}%</Text>
+                   <Text style={styles.resultSubtitle}>Purchase Options:</Text>
+                   {result.purchaseLinks.map((link, index) => (
+                     <Text key={index} style={styles.purchaseLink}>
+                       <Text
+                         style={styles.linkText}
+                         onPress={() => Linking.openURL(link.url)}
+                       >
+                         {link.name}
+                       </Text>
+                     </Text>
+                   ))}
+                   <Text style={styles.feedbackPrompt}>Is this correct?</Text>
+                   <View style={styles.feedbackButtons}>
+                     <TouchableOpacity onPress={() => submitFeedback(true)}>
+                       <Text style={styles.feedbackYes}>Yes</Text>
+                     </TouchableOpacity>
+                     <TouchableOpacity onPress={() => setFeedback('input')}>
+                       <Text style={styles.feedbackNo}>No</Text>
+                     </TouchableOpacity>
+                   </View>
+                   {feedback === 'input' && (
+                     <>
+                       <TextInput
+                         style={styles.input}
+                         placeholder="Enter correct model number"
+                         placeholderTextColor={theme.colors.black}
+                         value={userModelNumber}
+                         onChangeText={setUserModelNumber}
+                       />
+                       <TouchableOpacity
+                         style={styles.button}
+                         onPress={() => submitFeedback(false, userModelNumber)}
+                       >
+                         <Text style={styles.buttonText}>Submit Model Number</Text>
+                       </TouchableOpacity>
+                     </>
+                   )}
+                 </>
+               ) : (
+                 <>
+                   <Text style={styles.resultText}>No match found.</Text>
+                   <Text style={styles.feedbackPrompt}>Submit the correct model number:</Text>
+                   <TextInput
+                     style={styles.input}
+                     placeholder="Enter model number"
+                     placeholderTextColor={theme.colors.black}
+                     value={userModelNumber}
+                     onChangeText={setUserModelNumber}
+                   />
+                   <TouchableOpacity
+                     style={styles.button}
+                     onPress={() => submitFeedback(false, userModelNumber)}
+                   >
+                     <Text style={styles.buttonText}>Submit Model Number</Text>
+                   </TouchableOpacity>
+                 </>
+               )}
+               {feedback && !feedback.startsWith('input') && (
+                 <Text style={styles.feedbackMessage}>{feedback}</Text>
+               )}
+             </View>
+           )}
+         </View>
+       );
+     };
+
+     const styles = StyleSheet.create({
+         container: {
+             flex: 1,
+             backgroundColor: theme.colors.white,
+             alignItems: 'center',
+             padding: 20,
+         },
+         logo: {
+             width: 150,
+             height: 150,
+             marginBottom: 20,
+         },
+         title: {
+             fontFamily: 'Exo-font',
+             fontSize: 24,
+             color: theme.colors.red,
+             marginBottom: 20,
+         },
+         buttonRow: {
+             flexDirection: 'row',
+             justifyContent: 'space-between',
+             width: '80%',
+             marginBottom: 20,
+         },
+         button: {
+             backgroundColor: theme.colors.red,
+             padding: 15,
+             borderRadius: 5,
+             alignItems: 'center',
+             marginVertical: 10,
+             width: '40%',
+         },
+         buttonDisabled: {
+             backgroundColor: theme.colors.black,
+             opacity: 0.5,
+         },
+         buttonText: {
+             fontFamily: 'Exo-font',
+             fontSize: 16,
+             color: theme.colors.white,
+             fontWeight: 'bold',
+         },
+         uploadedImage: {
+             width: 200,
+             height: 200,
+             marginBottom: 20,
+             borderRadius: 10,
+         },
+         loader: {
+             marginTop: 20,
+         },
+         resultContainer: {
+             marginTop: 20,
+             alignItems: 'center',
+         },
+         resultTitle: {
+             fontFamily: 'Exo-font',
+             fontSize: 18,
+             fontWeight: 'bold',
+             color: theme.colors.red,
+         },
+         resultImage: {
+             width: 100,
+             height: 100,
+             marginTop: 10,
+             borderRadius: 5,
+         },
+         resultText: {
+             fontFamily: 'Exo-font',
+             fontSize: 16,
+             color: theme.colors.black,
+             marginTop: 5,
+         },
+         resultSubtitle: {
+             fontFamily: 'Exo-font',
+             fontSize: 16,
+             color: theme.colors.red,
+             marginTop: 10,
+         },
+         purchaseLink: {
+             fontFamily: 'Exo-font',
+             fontSize: 14,
+             marginTop: 5,
+         },
+         linkText: {
+             color: theme.colors.red,
+             textDecorationLine: 'underline',
+         },
+         feedbackPrompt: {
+             fontFamily: 'Exo-font',
+             fontSize: 16,
+             color: theme.colors.black,
+             marginTop: 20,
+         },
+         feedbackButtons: {
+             flexDirection: 'row',
+             marginTop: 10,
+         },
+         feedbackYes: {
+             fontFamily: 'Exo-font',
+             fontSize: 16,
+             color: 'green',
+             marginRight: 20,
+         },
+         feedbackNo: {
+             fontFamily: 'Exo-font',
+             fontSize: 16,
+             color: 'red',
+         },
+         feedbackMessage: {
+             fontFamily: 'Exo-font',
+             fontSize: 16,
+             color: theme.colors.black,
+             marginTop: 10,
+         },
+         input: {
+             width: '80%',
+             padding: 15,
+             borderWidth: 1,
+             borderColor: theme.colors.black,
+             borderRadius: 5,
+             marginTop: 10,
+             marginBottom: 10,
+             fontFamily: 'Exo-font',
+             fontSize: 16,
+             color: theme.colors.black,
+         },
+     });
+
+     export default FixtureIdentificationScreen;
