@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Linking, TextInput, ScrollView } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Linking, TextInput, ScrollView, FlatList } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { theme } from '../styles/theme';
@@ -125,14 +125,17 @@ const FixtureIdentificationScreen = () => {
         setResult({ imageUrl: data.imageUrl });
       } else {
         // Add location-based purchase links
+        const cleanModelNumber = data.modelNumber.replace(/_/g, ' '); // Replace underscores with spaces
         const locationLinks = location ? [
           {
             name: 'Home Depot (Nearby)',
-            url: `https://www.homedepot.com/s/${data.modelNumber}?lat=${location.coords.latitude}&lon=${location.coords.longitude}`
+            url: `https://www.homedepot.com/s/${cleanModelNumber}?lat=${location.coords.latitude}&lon=${location.coords.longitude}`,
+            price: '$34.99' // Mock price
           },
           {
             name: "Lowe's (Nearby)",
-            url: `https://www.lowes.com/search?searchTerm=${data.modelNumber}&lat=${location.coords.latitude}&lon=${location.coords.longitude}`
+            url: `https://www.lowes.com/search?searchTerm=${cleanModelNumber}&lat=${location.coords.latitude}&lon=${location.coords.longitude}`,
+            price: '$32.99' // Mock price
           }
         ] : [];
         setResult({
@@ -186,6 +189,20 @@ const FixtureIdentificationScreen = () => {
     setLoading(false);
   };
 
+  const renderPurchaseLink = ({ item }) => (
+    <TouchableOpacity
+      style={styles.purchaseCard}
+      onPress={() => Linking.openURL(item.url)}
+    >
+      <Image
+        source={{ uri: result.imageUrl }}
+        style={styles.purchaseThumbnail}
+      />
+      <Text style={styles.purchaseStore}>{item.name}</Text>
+      <Text style={styles.purchasePrice}>{item.price}</Text>
+    </TouchableOpacity>
+  );
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.innerContainer}>
@@ -225,16 +242,14 @@ const FixtureIdentificationScreen = () => {
                 <Text style={styles.resultText}>Model: {result.modelNumber}</Text>
                 <Text style={styles.resultText}>Probability: {(result.probability * 100).toFixed(2)}%</Text>
                 <Text style={styles.resultSubtitle}>Purchase Options:</Text>
-                {result.purchaseLinks.map((link, index) => (
-                  <Text key={index} style={styles.purchaseLink}>
-                    <Text
-                      style={styles.linkText}
-                      onPress={() => Linking.openURL(link.url)}
-                    >
-                      {link.name}
-                    </Text>
-                  </Text>
-                ))}
+                <FlatList
+                  data={result.purchaseLinks}
+                  renderItem={renderPurchaseLink}
+                  keyExtractor={(item, index) => index.toString()}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.purchaseList}
+                />
                 <Text style={styles.feedbackPrompt}>Is this correct?</Text>
                 <View style={styles.feedbackButtons}>
                   <TouchableOpacity onPress={() => submitFeedback(true)} style={styles.feedbackYes}>
@@ -376,9 +391,38 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
     marginTop: theme.spacing.medium,
   },
-  purchaseLink: {
+  purchaseList: {
+    marginTop: theme.spacing.medium,
+    paddingHorizontal: theme.spacing.small,
+  },
+  purchaseCard: {
+    width: 120,
+    marginRight: theme.spacing.medium,
+    borderWidth: 1,
+    borderColor: theme.colors.primary,
+    borderRadius: theme.borderRadius.medium,
+    padding: theme.spacing.small,
+    alignItems: 'center',
+    backgroundColor: theme.colors.background,
+    ...theme.shadow,
+  },
+  purchaseThumbnail: {
+    width: 80,
+    height: 80,
+    borderRadius: theme.borderRadius.medium,
+  },
+  purchaseStore: {
     fontFamily: theme.typography.body.fontFamily,
-    fontSize: theme.typography.body.fontSize,
+    fontSize: 14,
+    color: theme.colors.text,
+    marginTop: theme.spacing.small,
+    textAlign: 'center',
+  },
+  purchasePrice: {
+    fontFamily: theme.typography.body.fontFamily,
+    fontSize: 14,
+    color: theme.colors.primary,
+    fontWeight: 'bold',
     marginTop: theme.spacing.small,
   },
   linkText: {
@@ -398,7 +442,7 @@ const styles = StyleSheet.create({
     width: '50%',
   },
   feedbackYes: {
-    backgroundColor: 'green', // Keep green for "Yes" to indicate positive feedback
+    backgroundColor: 'green',
     padding: theme.spacing.medium,
     borderRadius: theme.borderRadius.medium,
     alignItems: 'center',
