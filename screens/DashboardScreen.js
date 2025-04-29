@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { theme } from '../styles/theme';
+import * as Animatable from 'react-native-animatable';
 
 const DashboardScreen = () => {
     const navigation = useNavigation();
@@ -26,6 +27,12 @@ const DashboardScreen = () => {
             >
                 <Text style={styles.buttonText}>Identify Fixtures</Text>
             </TouchableOpacity>
+            <TouchableOpacity
+                style={[styles.button, styles.secondaryButton]}
+                onPress={() => navigation.navigate('MyAccount')}
+            >
+                <Text style={styles.buttonText}>My Account</Text>
+            </TouchableOpacity>
         </View>
     );
 };
@@ -33,7 +40,7 @@ const DashboardScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: theme.colors.background, // White
+        backgroundColor: theme.colors.background,
         alignItems: 'center',
         justifyContent: 'center',
         padding: theme.spacing.large,
@@ -45,16 +52,11 @@ const styles = StyleSheet.create({
     },
     title: {
         ...theme.typography.title,
-        color: theme.colors.primary, // Red
+        color: theme.colors.primary,
         marginBottom: theme.spacing.small,
     },
-    subtitle: {
-        ...theme.typography.subtitle,
-        color: theme.colors.text, // Black
-        marginBottom: theme.spacing.large,
-    },
     button: {
-        backgroundColor: theme.colors.primary, // Red
+        backgroundColor: theme.colors.primary,
         paddingVertical: theme.spacing.medium,
         paddingHorizontal: theme.spacing.large,
         borderRadius: theme.borderRadius.medium,
@@ -64,11 +66,11 @@ const styles = StyleSheet.create({
         ...theme.shadow,
     },
     secondaryButton: {
-        backgroundColor: theme.colors.secondary, // Black
+        backgroundColor: theme.colors.secondary,
     },
     buttonText: {
         ...theme.typography.body,
-        color: theme.colors.textSecondary, // White
+        color: theme.colors.textSecondary,
     },
 });
 
