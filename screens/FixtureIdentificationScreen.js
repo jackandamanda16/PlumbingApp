@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Linking, TextInput, ScrollView, FlatList } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
+import * as Animatable from 'react-native-animatable';
 import { theme } from '../styles/theme';
 
 const FixtureIdentificationScreen = () => {
@@ -10,7 +11,6 @@ const FixtureIdentificationScreen = () => {
   const [result, setResult] = useState(null);
   const [feedback, setFeedback] = useState('');
   const [userModelNumber, setUserModelNumber] = useState('');
-  const [location, setLocation] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -21,38 +21,37 @@ const FixtureIdentificationScreen = () => {
       }
 
       let loc = await Location.getCurrentPositionAsync({});
-      setLocation(loc);
     })();
   }, []);
 
   const pickImage = async () => {
     try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      console.log('Media library permission status:', status);
-      if (status !== 'granted') {
-        alert('Sorry, we need media library permissions to make this work!');
-        return;
-      }
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        console.log('Media library permission status:', status);
+        if (status !== 'granted') {
+            alert('Sorry, we need media library permissions to make this work!');
+            return;
+        }
 
-      let result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        quality: 1,
-      });
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            quality: 1,
+        });
 
-      console.log('Image picker result:', result);
+        console.log('Image picker result:', result);
 
-      if (!result.canceled) {
-        setImage(result.assets[0].uri);
-        setResult(null);
-        setFeedback('');
-        setUserModelNumber('');
-      }
+        if (!result.canceled) {
+            setImage(result.assets[0].uri);
+            setResult(null);
+            setFeedback('');
+            setUserModelNumber('');
+        }
     } catch (error) {
-      console.error('Error in pickImage:', error);
-      alert('Error accessing media library: ' + error.message);
+        console.error('Error in pickImage:', error);
+        alert('Error accessing media library: ' + error.message);
     }
-  };
+};
 
   const takePhoto = async () => {
     try {
@@ -124,24 +123,7 @@ const FixtureIdentificationScreen = () => {
         alert('No match found. Try another photo or submit the model number manually.');
         setResult({ imageUrl: data.imageUrl });
       } else {
-        // Add location-based purchase links
-        const cleanModelNumber = data.modelNumber.replace(/_/g, ' '); // Replace underscores with spaces
-        const locationLinks = location ? [
-          {
-            name: 'Home Depot (Nearby)',
-            url: `https://www.homedepot.com/s/${cleanModelNumber}?lat=${location.coords.latitude}&lon=${location.coords.longitude}`,
-            price: '$34.99' // Mock price
-          },
-          {
-            name: "Lowe's (Nearby)",
-            url: `https://www.lowes.com/search?searchTerm=${cleanModelNumber}&lat=${location.coords.latitude}&lon=${location.coords.longitude}`,
-            price: '$32.99' // Mock price
-          }
-        ] : [];
-        setResult({
-          ...data,
-          purchaseLinks: [...data.purchaseLinks, ...locationLinks]
-        });
+        setResult(data);
       }
     } catch (error) {
       console.error('Fetch error:', error);
@@ -190,17 +172,23 @@ const FixtureIdentificationScreen = () => {
   };
 
   const renderPurchaseLink = ({ item }) => (
-    <TouchableOpacity
+    <Animatable.View
+      animation="fadeInUp"
+      duration={300}
       style={styles.purchaseCard}
-      onPress={() => Linking.openURL(item.url)}
     >
-      <Image
-        source={{ uri: result.imageUrl }}
-        style={styles.purchaseThumbnail}
-      />
-      <Text style={styles.purchaseStore}>{item.name}</Text>
-      <Text style={styles.purchasePrice}>{item.price}</Text>
-    </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.purchaseCardInner}
+        onPress={() => Linking.openURL(item.url)}
+        activeOpacity={0.8}
+      >
+        <Image
+          source={{ uri: result.imageUrl }}
+          style={styles.purchaseThumbnail}
+        />
+        <Text style={styles.purchaseStore}>{item.name}</Text>
+      </TouchableOpacity>
+    </Animatable.View>
   );
 
   return (
@@ -406,6 +394,10 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
     ...theme.shadow,
   },
+  purchaseCardInner: {
+    width: '100%',
+    alignItems: 'center',
+  },
   purchaseThumbnail: {
     width: 80,
     height: 80,
@@ -417,13 +409,6 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
     marginTop: theme.spacing.small,
     textAlign: 'center',
-  },
-  purchasePrice: {
-    fontFamily: theme.typography.body.fontFamily,
-    fontSize: 14,
-    color: theme.colors.primary,
-    fontWeight: 'bold',
-    marginTop: theme.spacing.small,
   },
   linkText: {
     color: theme.colors.primary,

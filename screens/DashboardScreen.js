@@ -46,8 +46,8 @@ const styles = StyleSheet.create({
         padding: theme.spacing.large,
     },
     logo: {
-        width: 150,
-        height: 150,
+        width: 300,
+        height: 300,
         marginBottom: theme.spacing.large,
     },
     title: {
@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
         marginBottom: theme.spacing.small,
     },
     button: {
-        backgroundColor: theme.colors.primary,
+        backgroundColor: theme.colors.secondary,
         paddingVertical: theme.spacing.medium,
         paddingHorizontal: theme.spacing.large,
         borderRadius: theme.borderRadius.medium,
@@ -67,6 +67,13 @@ const styles = StyleSheet.create({
     },
     secondaryButton: {
         backgroundColor: theme.colors.secondary,
+        paddingVertical: theme.spacing.medium,
+        paddingHorizontal: theme.spacing.large,
+        borderRadius: theme.borderRadius.medium,
+        marginVertical: theme.spacing.small,
+        width: '80%',
+        alignItems: 'center',
+        ...theme.shadow,
     },
     buttonText: {
         ...theme.typography.body,
