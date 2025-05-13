@@ -171,25 +171,37 @@ const FixtureIdentificationScreen = () => {
     setLoading(false);
   };
 
-  const renderPurchaseLink = ({ item }) => (
-    <Animatable.View
-      animation="fadeInUp"
-      duration={300}
-      style={styles.purchaseCard}
-    >
-      <TouchableOpacity
-        style={styles.purchaseCardInner}
-        onPress={() => Linking.openURL(item.url)}
-        activeOpacity={0.8}
+  const renderPurchaseLink = ({ item }) => {
+    // Map store names to their logo images
+    const storeLogos = {
+      "Amazon": require('../assets/amazon_logo.png'),
+      "Home Depot": require('../assets/home_depot_logo.png'),
+      "Lowe's": require('../assets/lowes_logo.png')
+    };
+
+    // Get the logo for the current store, default to Amazon if not found
+    const logoSource = storeLogos[item.name] || storeLogos["Amazon"];
+
+    return (
+      <Animatable.View
+        animation="fadeInUp"
+        duration={300}
+        style={styles.purchaseCard}
       >
-        <Image
-          source={{ uri: result.imageUrl }}
-          style={styles.purchaseThumbnail}
-        />
-        <Text style={styles.purchaseStore}>{item.name}</Text>
-      </TouchableOpacity>
-    </Animatable.View>
-  );
+        <TouchableOpacity
+          style={styles.purchaseCardInner}
+          onPress={() => Linking.openURL(item.url)}
+          activeOpacity={0.8}
+        >
+          <Image
+            source={logoSource}
+            style={styles.purchaseThumbnail}
+          />
+          <Text style={styles.purchaseStore}>{item.name}</Text>
+        </TouchableOpacity>
+      </Animatable.View>
+    );
+  };
 
   return (
     <ScrollView style={styles.container}>
@@ -312,7 +324,7 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.title.fontFamily,
     fontSize: theme.typography.title.fontSize,
     fontWeight: theme.typography.title.fontWeight,
-    color: theme.colors.primary,
+    color: '#000000', // Updated to black
     marginBottom: theme.spacing.large,
   },
   buttonRow: {
@@ -322,7 +334,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.large,
   },
   button: {
-    backgroundColor: theme.colors.primary,
+    backgroundColor: '#000000', // Updated to black
     padding: theme.spacing.medium,
     borderRadius: theme.borderRadius.medium,
     alignItems: 'center',
@@ -337,7 +349,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontFamily: theme.typography.body.fontFamily,
     fontSize: theme.typography.body.fontSize,
-    color: theme.colors.textSecondary,
+    color: '#FFFFFF', // Updated to white
     fontWeight: 'bold',
     textAlign: 'center',
   },
@@ -376,7 +388,7 @@ const styles = StyleSheet.create({
   resultSubtitle: {
     fontFamily: theme.typography.subtitle.fontFamily,
     fontSize: theme.typography.subtitle.fontSize,
-    color: theme.colors.primary,
+    color: '#000000', // Updated to black
     marginTop: theme.spacing.medium,
   },
   purchaseList: {
@@ -384,7 +396,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.small,
   },
   purchaseCard: {
-    width: 120,
+    width: 100, // Reduced width from 120 to 100
     marginRight: theme.spacing.medium,
     borderWidth: 1,
     borderColor: theme.colors.primary,
@@ -399,8 +411,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   purchaseThumbnail: {
-    width: 80,
-    height: 80,
+    width: 60, // Reduced from 80 to 60
+    height: 60, // Reduced from 80 to 60
     borderRadius: theme.borderRadius.medium,
   },
   purchaseStore: {
@@ -427,7 +439,7 @@ const styles = StyleSheet.create({
     width: '50%',
   },
   feedbackYes: {
-    backgroundColor: 'green',
+    backgroundColor: 'green', // Updated to green
     padding: theme.spacing.medium,
     borderRadius: theme.borderRadius.medium,
     alignItems: 'center',
@@ -435,7 +447,7 @@ const styles = StyleSheet.create({
     ...theme.shadow,
   },
   feedbackNo: {
-    backgroundColor: theme.colors.primary,
+    backgroundColor: '#000000', // Updated to black
     padding: theme.spacing.medium,
     borderRadius: theme.borderRadius.medium,
     alignItems: 'center',
