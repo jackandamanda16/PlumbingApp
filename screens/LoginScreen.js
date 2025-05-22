@@ -1,25 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { theme } from '../styles/theme';
-import LinearGradient from 'react-native-linear-gradient'; // Import for gradient background
-import * as Animatable from 'react-native-animatable'; // Import for entrance animations
-import Reanimated, { useSharedValue, useAnimatedStyle, withSpring, withRepeat, withTiming } from 'react-native-reanimated'; // Import Reanimated
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Animatable from 'react-native-animatable';
+import Reanimated, { useSharedValue, useAnimatedStyle, withSpring, withRepeat, withTiming } from 'react-native-reanimated';
 
 const LoginScreen = ({ navigation }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
   // Reanimated values for animations
-  const logoScale = useSharedValue(1); // For pulsing logo
-  const buttonGlowOpacity = useSharedValue(0); // For button glow on press
+  const logoScale = useSharedValue(1);
+  const buttonGlowOpacity = useSharedValue(0);
 
   // Pulsing animation for logo
   useEffect(() => {
-    logoScale.value = withRepeat(
-      withSpring(1.1, { stiffness: 100, damping: 10 }),
-      -1, // Infinite loop
-      true // Reverse
-    );
+    logoScale.value = withSpring(1.1, { stiffness: 100, damping: 10 });
   }, []);
 
   // Glow animation for buttons on press
@@ -57,7 +53,7 @@ const LoginScreen = ({ navigation }) => {
 
   return (
     <LinearGradient
-      colors={['#C04343', '#000000']} // Gradient from red (#C04343) to black
+      colors={['#C04343', '#000000']}
       style={styles.container}
     >
       <Reanimated.View style={animatedLogoStyle}>
@@ -80,7 +76,7 @@ const LoginScreen = ({ navigation }) => {
         <TextInput
           style={styles.input}
           placeholder="Username"
-          placeholderTextColor="rgba(255, 255, 255, 0.7)" // Light gray for contrast
+          placeholderTextColor="rgba(255, 255, 255, 0.7)"
           value={username}
           onChangeText={setUsername}
           autoCapitalize="none"
@@ -90,7 +86,7 @@ const LoginScreen = ({ navigation }) => {
         <TextInput
           style={styles.input}
           placeholder="Password"
-          placeholderTextColor="rgba(255, 255, 255, 0.7)" // Light gray for contrast
+          placeholderTextColor="rgba(255, 255, 255, 0.7)"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
@@ -146,9 +142,9 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'Exo-font',
     fontSize: 24,
-    color: '#FFFFFF', // White for contrast on gradient background
+    color: '#FFFFFF',
     marginBottom: 20,
-    textShadowColor: 'rgba(192, 67, 67, 0.5)', // Red glow (#C04343)
+    textShadowColor: 'rgba(192, 67, 67, 0.5)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
   },
@@ -156,26 +152,26 @@ const styles = StyleSheet.create({
     width: '100%',
     padding: 15,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)', // Subtle white border
+    borderColor: 'rgba(255, 255, 255, 0.3)',
     borderRadius: 5,
     marginBottom: 15,
     fontFamily: 'Exo-font',
     fontSize: 16,
-    color: '#FFFFFF', // White text for contrast
-    backgroundColor: 'rgba(255, 255, 255, 0.1)', // Slightly transparent futuristic input
-    shadowColor: '#C04343', // Red glow
+    color: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    shadowColor: '#C04343',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.8,
     shadowRadius: 10,
   },
   button: {
-    backgroundColor: '#000000', // Black button
+    backgroundColor: '#000000',
     padding: 15,
     borderRadius: 5,
     width: '100%',
     alignItems: 'center',
     marginBottom: 15,
-    shadowColor: '#C04343', // Red glow
+    shadowColor: '#C04343',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.8,
     shadowRadius: 10,
@@ -183,16 +179,16 @@ const styles = StyleSheet.create({
   buttonText: {
     fontFamily: 'Exo-font',
     fontSize: 18,
-    color: '#FFFFFF', // White text
+    color: '#FFFFFF',
     fontWeight: 'bold',
   },
   link: {
     fontFamily: 'Exo-font',
     fontSize: 16,
-    color: '#FFFFFF', // White for contrast
+    color: '#FFFFFF',
     textDecorationLine: 'underline',
     marginTop: 10,
-    textShadowColor: 'rgba(192, 67, 67, 0.5)', // Red glow
+    textShadowColor: 'rgba(192, 67, 67, 0.5)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
   },
@@ -203,7 +199,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     borderRadius: 5,
-    backgroundColor: 'rgba(192, 67, 67, 0.3)', // Red glow (#C04343 with opacity)
+    backgroundColor: 'rgba(192, 67, 67, 0.3)',
     shadowColor: '#C04343',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 1,
