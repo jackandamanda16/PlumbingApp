@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, } from 'react-native';
 import { theme } from '../styles/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
-import Reanimated, { useSharedValue, useAnimatedStyle, withSpring, withRepeat, withTiming } from 'react-native-reanimated';
+import Reanimated, { useSharedValue, useAnimatedStyle, withSpring, withTiming } from 'react-native-reanimated';
 
 const LoginScreen = ({ navigation }) => {
   const [username, setUsername] = useState('');
@@ -13,7 +13,7 @@ const LoginScreen = ({ navigation }) => {
   const logoScale = useSharedValue(1);
   const buttonGlowOpacity = useSharedValue(0);
 
-  // Pulsing animation for logo
+  // Single pulse animation for logo (already updated to pulse once)
   useEffect(() => {
     logoScale.value = withSpring(1.1, { stiffness: 100, damping: 10 });
   }, []);
@@ -60,18 +60,12 @@ const LoginScreen = ({ navigation }) => {
         <Animatable.Image
           animation="zoomIn"
           duration={1000}
-          source={require('../assets/logo.png')}
+          source={require('../assets/logobw.png')}
           style={styles.logo}
           resizeMode="contain"
         />
       </Reanimated.View>
-      <Animatable.Text
-        animation="fadeInDown"
-        duration={800}
-        style={styles.title}
-      >
-        Welcome to PlumbSmartAI
-      </Animatable.Text>
+
       <Animatable.View animation="fadeInUp" duration={800} delay={200}>
         <TextInput
           style={styles.input}
@@ -92,7 +86,7 @@ const LoginScreen = ({ navigation }) => {
           secureTextEntry
         />
       </Animatable.View>
-      <Animatable.View animation="fadeInUp" duration={800} delay={600}>
+      <View>
         <TouchableOpacity
           style={styles.button}
           onPress={handleLogin}
@@ -102,8 +96,8 @@ const LoginScreen = ({ navigation }) => {
           <Reanimated.View style={[styles.glowOverlay, animatedGlowStyle]} />
           <Text style={styles.buttonText}>Login</Text>
         </TouchableOpacity>
-      </Animatable.View>
-      <Animatable.View animation="fadeInUp" duration={800} delay={800}>
+      </View>
+      <View>
         <TouchableOpacity
           onPress={handleForgotPassword}
           onPressIn={handleButtonPressIn}
@@ -112,8 +106,8 @@ const LoginScreen = ({ navigation }) => {
           <Reanimated.View style={[styles.glowOverlay, animatedGlowStyle]} />
           <Text style={styles.link}>Forgot My Password</Text>
         </TouchableOpacity>
-      </Animatable.View>
-      <Animatable.View animation="fadeInUp" duration={800} delay={1000}>
+      </View>
+      <View>
         <TouchableOpacity
           onPress={() => navigation.navigate('Signup')}
           onPressIn={handleButtonPressIn}
@@ -122,7 +116,7 @@ const LoginScreen = ({ navigation }) => {
           <Reanimated.View style={[styles.glowOverlay, animatedGlowStyle]} />
           <Text style={styles.link}>Don't have an account? Sign Up</Text>
         </TouchableOpacity>
-      </Animatable.View>
+      </View>
     </LinearGradient>
   );
 };
@@ -137,24 +131,15 @@ const styles = StyleSheet.create({
   logo: {
     width: 300,
     height: 300,
-    marginBottom: 10,
-  },
-  title: {
-    fontFamily: 'Exo-font',
-    fontSize: 24,
-    color: '#FFFFFF',
-    marginBottom: 20,
-    textShadowColor: 'rgba(192, 67, 67, 0.5)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
+    marginBottom: 15,
   },
   input: {
-    width: '100%',
+    width: '90%', // Increased from '100%' (with padding, this was effectively narrower)
     padding: 15,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.3)',
     borderRadius: 5,
-    marginBottom: 15,
+    marginBottom: 30,
     fontFamily: 'Exo-font',
     fontSize: 16,
     color: '#FFFFFF',
@@ -168,9 +153,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
     padding: 15,
     borderRadius: 5,
-    width: '100%',
+    width: '90%', // Match input width for consistency
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 30,
     shadowColor: '#C04343',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.8,
@@ -188,6 +173,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     textDecorationLine: 'underline',
     marginTop: 10,
+    marginBottom: 10,
     textShadowColor: 'rgba(192, 67, 67, 0.5)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
