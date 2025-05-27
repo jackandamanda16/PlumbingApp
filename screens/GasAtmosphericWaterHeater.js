@@ -5,7 +5,7 @@ import OpenAI from 'openai';
 import * as FileSystem from 'expo-file-system';
 import Constants from 'expo-constants';
 import { theme } from '../styles/theme';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, withRepeat, withTiming, Easing } from 'react-native-reanimated';
+import * as Animatable from 'react-native-animatable';
 
 const openai = new OpenAI({ apiKey: Constants.expoConfig.extra.openaiApiKey });
 const CLOUDINARY_CLOUD_NAME = 'dxntxfdzr';
@@ -20,55 +20,29 @@ const GasAtmosphericWaterHeater = () => {
     const [advice, setAdvice] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
-    const scalePick = useSharedValue(1);
-    const scaleAdvice = useSharedValue(1);
-
-    const pickAnimatedStyle = useAnimatedStyle(() => ({
-        transform: [{ scale: scalePick.value }],
-    }));
-
-    const adviceAnimatedStyle = useAnimatedStyle(() => ({
-        transform: [{ scale: scaleAdvice.value }],
-    }));
-
-    const rotation = useSharedValue(0);
-    const spinAnimatedStyle = useAnimatedStyle(() => ({
-        transform: [{ rotate: `${rotation.value}deg` }],
-    }));
-
-    useEffect(() => {
-        console.log('isLoading:', isLoading);
-        if (isLoading) {
-            rotation.value = withRepeat(withTiming(360, { duration: 1000, easing: Easing.linear }), -1);
-        } else {
-            rotation.value = 0;
-        }
-    }, [isLoading]);
-
-    const handlePickPressIn = () => {
-        scalePick.value = withSpring(0.95);
-    };
-
-    const handlePickPressOut = () => {
-        scalePick.value = withSpring(1);
-    };
-
-    const handleAdvicePressIn = () => {
-        scaleAdvice.value = withSpring(0.95);
-    };
-
-    const handleAdvicePressOut = () => {
-        scaleAdvice.value = withSpring(1);
-    };
-
     const pickImage = async () => {
-        let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            quality: 1,
-        });
-        if (!result.canceled) {
-            setImage(result.assets[0].uri);
+        try {
+            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            console.log('Media library permission status:', status);
+            if (status !== 'granted') {
+                alert('Sorry, we need media library permissions to make this work!');
+                return;
+            }
+
+            let result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: true,
+                quality: 1,
+            });
+
+            console.log('Image picker result:', result);
+
+            if (!result.canceled) {
+                setImage(result.assets[0].uri);
+            }
+        } catch (error) {
+            console.error('Error in pickImage:', error);
+            alert('Error accessing media library: ' + error.message);
         }
     };
 
@@ -138,33 +112,44 @@ const GasAtmosphericWaterHeater = () => {
                     value={modelSerial}
                     onChangeText={setModelSerial}
                 />
-                <Animated.View style={[styles.button, pickAnimatedStyle]}>
+                <Animatable.View
+                    animation="bounceIn"
+                    duration={300}
+                    style={styles.button}
+                >
                     <TouchableOpacity
-                        onPressIn={handlePickPressIn}
-                        onPressOut={handlePickPressOut}
                         onPress={pickImage}
+                        activeOpacity={0.8}
                     >
                         <Text style={styles.buttonText}>Pick Image</Text>
                     </TouchableOpacity>
-                </Animated.View>
+                </Animatable.View>
                 {image && <Image source={{ uri: image }} style={styles.image} />}
-                <Animated.View style={[styles.button, adviceAnimatedStyle]}>
+                <Animatable.View
+                    animation="bounceIn"
+                    duration={300}
+                    style={styles.button}
+                >
                     <TouchableOpacity
-                        onPressIn={handleAdvicePressIn}
-                        onPressOut={handleAdvicePressOut}
                         onPress={fetchAIAdvice}
+                        activeOpacity={0.8}
                     >
                         <Text style={styles.buttonText}>Get AI Advice</Text>
                     </TouchableOpacity>
-                </Animated.View>
+                </Animatable.View>
                 {isLoading ? (
-                    <Animated.View style={[styles.loadingContainer, spinAnimatedStyle]}>
+                    <Animatable.View
+                        animation="rotate"
+                        iterationCount="infinite"
+                        duration={1000}
+                        style={styles.loadingContainer}
+                    >
                         <Image
-                            source={require('../assets/Logo-NoText.png')} // Updated file
+                            source={require('../assets/Logo-NoText.png')}
                             style={styles.loadingLogo}
                             resizeMode="contain"
                         />
-                    </Animated.View>
+                    </Animatable.View>
                 ) : advice ? (
                     <Text style={styles.advice}>{advice}</Text>
                 ) : null}
@@ -176,14 +161,14 @@ const GasAtmosphericWaterHeater = () => {
 const styles = StyleSheet.create({
     scrollContainer: {
         flex: 1,
-        backgroundColor: theme.colors.background, // White
+        backgroundColor: theme.colors.background,
     },
     contentContainer: {
         padding: theme.spacing.large,
     },
     title: {
         ...theme.typography.title,
-        color: theme.colors.primary, // Logo red (#C04343)
+        color: theme.colors.primary,
         marginBottom: theme.spacing.large,
     },
     input: {
@@ -203,7 +188,7 @@ const styles = StyleSheet.create({
         borderRadius: theme.borderRadius.medium,
     },
     button: {
-        backgroundColor: theme.colors.accent, // Logo red (#C04343)
+        backgroundColor: theme.colors.accent,
         padding: theme.spacing.medium,
         borderRadius: theme.borderRadius.medium,
         marginVertical: theme.spacing.small,
@@ -212,19 +197,19 @@ const styles = StyleSheet.create({
     },
     buttonText: {
         ...theme.typography.body,
-        color: theme.colors.red, // Red
+        color: theme.colors.red,
     },
     advice: {
         ...theme.typography.body,
         marginTop: theme.spacing.large,
-        color: theme.colors.text, // Black
+        color: theme.colors.text,
     },
     loadingContainer: {
         marginTop: theme.spacing.large,
         alignItems: 'center',
     },
     loadingLogo: {
-        width: 50, // Smaller brain logo
+        width: 50,
         height: 50,
     },
 });

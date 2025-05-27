@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Linking, TextInput, ScrollView, FlatList } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Linking, TextInput, ScrollView, FlatList, KeyboardAvoidingView, Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
-import * as Animatable from 'react-native-animatable';
 import { theme } from '../styles/theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import Reanimated, { useSharedValue, useAnimatedStyle, withSpring, withTiming } from 'react-native-reanimated';
 
 const FixtureIdentificationScreen = () => {
   const [image, setImage] = useState(null);
@@ -12,7 +13,14 @@ const FixtureIdentificationScreen = () => {
   const [feedback, setFeedback] = useState('');
   const [userModelNumber, setUserModelNumber] = useState('');
 
+  // Reanimated values for animations
+  const logoScale = useSharedValue(1);
+  const buttonGlowOpacity = useSharedValue(0);
+
+  // Single pulse animation for logo
   useEffect(() => {
+    logoScale.value = withSpring(1.1, { stiffness: 100, damping: 10 });
+
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
@@ -24,34 +32,57 @@ const FixtureIdentificationScreen = () => {
     })();
   }, []);
 
+  // Glow animation for buttons on press
+  const handleButtonPressIn = () => {
+    buttonGlowOpacity.value = withTiming(1, { duration: 200 });
+  };
+
+  const handleButtonPressOut = () => {
+    buttonGlowOpacity.value = withTiming(0, { duration: 200 });
+  };
+
+  // Animated style for logo
+  const animatedLogoStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: logoScale.value }],
+    };
+  });
+
+  // Animated style for button glow
+  const animatedGlowStyle = useAnimatedStyle(() => {
+    return {
+      opacity: buttonGlowOpacity.value,
+    };
+  });
+
   const pickImage = async () => {
     try {
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        console.log('Media library permission status:', status);
-        if (status !== 'granted') {
-            alert('Sorry, we need media library permissions to make this work!');
-            return;
-        }
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      console.log('Media library permission status:', status);
+      if (status !== 'granted') {
+        alert('Sorry, we need media library permissions to make this work!');
+        return;
+      }
 
-        let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            quality: 1,
-        });
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 1,
+      });
 
-        console.log('Image picker result:', result);
+      console.log('Image picker result:', result);
 
-        if (!result.canceled) {
-            setImage(result.assets[0].uri);
-            setResult(null);
-            setFeedback('');
-            setUserModelNumber('');
-        }
+      if (!result.canceled) {
+        setImage(result.assets[0].uri);
+        setResult(null);
+        setFeedback('');
+        setUserModelNumber('');
+      }
     } catch (error) {
-        console.error('Error in pickImage:', error);
-        alert('Error accessing media library: ' + error.message);
+      console.error('Error in pickImage:', error);
+      alert('Error accessing media library: ' + error.message);
     }
-};
+  };
 
   const takePhoto = async () => {
     try {
@@ -183,294 +214,413 @@ const FixtureIdentificationScreen = () => {
     const logoSource = storeLogos[item.name] || storeLogos["Amazon"];
 
     return (
-      <Animatable.View
-        animation="fadeInUp"
-        duration={300}
-        style={styles.purchaseCard}
-      >
+      <View style={styles.purchaseCard}>
         <TouchableOpacity
           style={styles.purchaseCardInner}
           onPress={() => Linking.openURL(item.url)}
           activeOpacity={0.8}
+          onPressIn={handleButtonPressIn}
+          onPressOut={handleButtonPressOut}
         >
+          <Reanimated.View style={[styles.glowOverlay, animatedGlowStyle]} />
           <Image
             source={logoSource}
             style={styles.purchaseThumbnail}
           />
           <Text style={styles.purchaseStore}>{item.name}</Text>
         </TouchableOpacity>
-      </Animatable.View>
+      </View>
     );
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.innerContainer}>
-        <Image
-          source={require('../assets/logo.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-        <Text style={styles.title}>Identify Fixture</Text>
-        <View style={styles.buttonRow}>
-          <TouchableOpacity style={styles.button} onPress={pickImage}>
-            <Text style={styles.buttonText}>Upload Photo</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={takePhoto}>
-            <Text style={styles.buttonText}>Take Photo</Text>
-          </TouchableOpacity>
-        </View>
-        {image && (
-          <Image source={{ uri: image }} style={styles.uploadedImage} />
-        )}
-        <TouchableOpacity
-          style={[styles.button, !image || loading ? styles.buttonDisabled : {}]}
-          onPress={searchFixture}
-          disabled={!image || loading}
+    <LinearGradient
+      colors={['#C04343', '#000000']}
+      style={styles.container}
+    >
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoidingContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          <Text style={styles.buttonText}>Search</Text>
-        </TouchableOpacity>
-        {loading && (
-          <ActivityIndicator size="large" color={theme.colors.primary} style={styles.loader} />
-        )}
-        {result && (
-          <View style={styles.resultContainer}>
-            <Text style={styles.resultTitle}>Result:</Text>
-            {result.modelNumber ? (
-              <>
-                <Image source={{ uri: result.imageUrl }} style={styles.resultImage} />
-                <Text style={styles.resultText}>Model: {result.modelNumber}</Text>
-                <Text style={styles.resultText}>Probability: {(result.probability * 100).toFixed(2)}%</Text>
-                <Text style={styles.resultSubtitle}>Purchase Options:</Text>
-                <FlatList
-                  data={result.purchaseLinks}
-                  renderItem={renderPurchaseLink}
-                  keyExtractor={(item, index) => index.toString()}
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  style={styles.purchaseList}
-                />
-                <Text style={styles.feedbackPrompt}>Is this correct?</Text>
-                <View style={styles.feedbackButtons}>
-                  <TouchableOpacity onPress={() => submitFeedback(true)} style={styles.feedbackYes}>
-                    <Text style={styles.buttonText}>Yes</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => setFeedback('input')} style={styles.feedbackNo}>
-                    <Text style={styles.buttonText}>No</Text>
-                  </TouchableOpacity>
-                </View>
-                {feedback === 'input' && (
-                  <>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Enter correct model number"
-                      placeholderTextColor={theme.colors.text}
-                      value={userModelNumber}
-                      onChangeText={setUserModelNumber}
-                    />
-                    <TouchableOpacity
-                      style={styles.button}
-                      onPress={() => submitFeedback(false, userModelNumber)}
-                    >
-                      <Text style={styles.buttonText}>Submit Model Number</Text>
-                    </TouchableOpacity>
-                  </>
-                )}
-              </>
-            ) : (
-              <>
-                <Text style={styles.resultText}>No match found.</Text>
-                <Text style={styles.feedbackPrompt}>Submit the correct model number:</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter model number"
-                  placeholderTextColor={theme.colors.text}
-                  value={userModelNumber}
-                  onChangeText={setUserModelNumber}
-                />
-                <TouchableOpacity
-                  style={styles.button}
-                  onPress={() => submitFeedback(false, userModelNumber)}
-                >
-                  <Text style={styles.buttonText}>Submit Model Number</Text>
-                </TouchableOpacity>
-              </>
-            )}
-            {feedback && !feedback.startsWith('input') && (
-              <Text style={styles.feedbackMessage}>{feedback}</Text>
-            )}
+          <Reanimated.View style={animatedLogoStyle}>
+            <Image
+              source={require('../assets/logobw.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+          </Reanimated.View>
+          <Text style={styles.title}>Identify Fixture</Text>
+          <View style={styles.buttonRow}>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={pickImage}
+              onPressIn={handleButtonPressIn}
+              onPressOut={handleButtonPressOut}
+            >
+              <Reanimated.View style={[styles.glowOverlay, animatedGlowStyle]} />
+              <Text style={styles.buttonText}>Upload Photo</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={takePhoto}
+              onPressIn={handleButtonPressIn}
+              onPressOut={handleButtonPressOut}
+            >
+              <Reanimated.View style={[styles.glowOverlay, animatedGlowStyle]} />
+              <Text style={styles.buttonText}>Take Photo</Text>
+            </TouchableOpacity>
           </View>
-        )}
-      </View>
-    </ScrollView>
+          {image && (
+            <Image source={{ uri: image }} style={styles.uploadedImage} />
+          )}
+          <TouchableOpacity
+            style={[styles.searchButton, !image || loading ? styles.searchButtonDisabled : {}]}
+            onPress={searchFixture}
+            disabled={!image || loading}
+            onPressIn={handleButtonPressIn}
+            onPressOut={handleButtonPressOut}
+          >
+            <Reanimated.View style={[styles.glowOverlay, animatedGlowStyle]} />
+            <Text style={[styles.searchButtonText, !image || loading ? styles.searchButtonTextDisabled : {}]}>Search</Text>
+          </TouchableOpacity>
+          {loading && (
+            <ActivityIndicator size="large" color="#FFFFFF" style={styles.loader} />
+          )}
+          {result && (
+            <View style={styles.resultContainer}>
+              <Text style={styles.resultTitle}>Result:</Text>
+              {result.modelNumber ? (
+                <>
+                  <Image source={{ uri: result.imageUrl }} style={styles.resultImage} />
+                  <Text style={styles.resultText}>Model: {result.modelNumber}</Text>
+                  <Text style={styles.resultText}>Probability: {(result.probability * 100).toFixed(2)}%</Text>
+                  <Text style={styles.resultSubtitle}>Purchase Options:</Text>
+                  <FlatList
+                    data={result.purchaseLinks}
+                    renderItem={renderPurchaseLink}
+                    keyExtractor={(item, index) => index.toString()}
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.purchaseList}
+                  />
+                  <Text style={styles.feedbackPrompt}>Is this correct?</Text>
+                  <View style={styles.feedbackButtons}>
+                    <TouchableOpacity
+                      onPress={() => submitFeedback(true)}
+                      style={styles.feedbackYes}
+                      onPressIn={handleButtonPressIn}
+                      onPressOut={handleButtonPressOut}
+                    >
+                      <Reanimated.View style={[styles.glowOverlay, animatedGlowStyle]} />
+                      <Text style={styles.buttonText}>Yes</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => setFeedback('input')}
+                      style={styles.feedbackNo}
+                      onPressIn={handleButtonPressIn}
+                      onPressOut={handleButtonPressOut}
+                    >
+                      <Reanimated.View style={[styles.glowOverlay, animatedGlowStyle]} />
+                      <Text style={styles.buttonText}>No</Text>
+                    </TouchableOpacity>
+                  </View>
+                  {feedback === 'input' && (
+                    <>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Enter correct model number"
+                        placeholderTextColor="rgba(255, 255, 255, 0.7)"
+                        value={userModelNumber}
+                        onChangeText={setUserModelNumber}
+                      />
+                      <TouchableOpacity
+                        style={styles.button}
+                        onPress={() => submitFeedback(false, userModelNumber)}
+                        onPressIn={handleButtonPressIn}
+                        onPressOut={handleButtonPressOut}
+                      >
+                        <Reanimated.View style={[styles.glowOverlay, animatedGlowStyle]} />
+                        <Text style={styles.buttonText}>Submit Model Number</Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
+                </>
+              ) : (
+                <>
+                  <Text style={styles.resultText}>No match found.</Text>
+                  <Text style={styles.feedbackPrompt}>Submit the correct model number:</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter model number"
+                    placeholderTextColor="rgba(255, 255, 255, 0.7)"
+                    value={userModelNumber}
+                    onChangeText={setUserModelNumber}
+                  />
+                  <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => submitFeedback(false, userModelNumber)}
+                    onPressIn={handleButtonPressIn}
+                    onPressOut={handleButtonPressOut}
+                  >
+                    <Reanimated.View style={[styles.glowOverlay, animatedGlowStyle]} />
+                    <Text style={styles.buttonText}>Submit Model Number</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+              {feedback && !feedback.startsWith('input') && (
+                <Text style={styles.feedbackMessage}>{feedback}</Text>
+              )}
+            </View>
+          )}
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
   },
-  innerContainer: {
+  keyboardAvoidingContainer: {
+    flex: 1,
+    width: '100%',
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    padding: theme.spacing.large,
+    padding: 20,
   },
   logo: {
-    width: 150,
-    height: 150,
-    marginBottom: theme.spacing.large,
+    width: 300,
+    height: 300,
+    marginBottom: 15,
+    shadowColor: '#C04343',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
   },
   title: {
-    fontFamily: theme.typography.title.fontFamily,
-    fontSize: theme.typography.title.fontSize,
-    fontWeight: theme.typography.title.fontWeight,
-    color: '#000000', // Updated to black
-    marginBottom: theme.spacing.large,
+    fontFamily: 'Exo-font',
+    fontSize: 24,
+    color: '#FFFFFF',
+    marginBottom: 20,
+    textShadowColor: 'rgba(192, 67, 67, 0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
   },
   buttonRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '80%',
-    marginBottom: theme.spacing.large,
+    width: '90%',
+    marginBottom: 20,
   },
   button: {
-    backgroundColor: '#000000', // Updated to black
-    padding: theme.spacing.medium,
-    borderRadius: theme.borderRadius.medium,
+    backgroundColor: '#000000',
+    padding: 15,
+    borderRadius: 5,
     alignItems: 'center',
-    marginVertical: theme.spacing.small,
-    width: '40%',
-    ...theme.shadow,
+    marginVertical: 5,
+    width: '45%',
+    shadowColor: '#C04343',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
+  },
+  searchButton: {
+    backgroundColor: '#FFFFFF',
+    padding: 15,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginVertical: 5,
+    width: '45%',
+    shadowColor: '#C04343',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
   },
   buttonDisabled: {
-    backgroundColor: theme.colors.text,
+    backgroundColor: '#333333',
+    opacity: 0.5,
+  },
+  searchButtonDisabled: {
     opacity: 0.5,
   },
   buttonText: {
-    fontFamily: theme.typography.body.fontFamily,
-    fontSize: theme.typography.body.fontSize,
-    color: '#FFFFFF', // Updated to white
+    fontFamily: 'Exo-font',
+    fontSize: 18,
+    color: '#FFFFFF',
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  searchButtonText: {
+    fontFamily: 'Exo-font',
+    fontSize: 18,
+    color: '#000000',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  searchButtonTextDisabled: {
+    color: '#666666', // Gray text when disabled
   },
   uploadedImage: {
     width: 200,
     height: 200,
-    marginBottom: theme.spacing.large,
-    borderRadius: theme.borderRadius.medium,
+    marginBottom: 20,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   loader: {
-    marginTop: theme.spacing.large,
+    marginTop: 20,
   },
   resultContainer: {
-    marginTop: theme.spacing.large,
+    marginTop: 20,
     alignItems: 'center',
     width: '100%',
   },
   resultTitle: {
-    fontFamily: theme.typography.subtitle.fontFamily,
-    fontSize: theme.typography.subtitle.fontSize,
+    fontFamily: 'Exo-font',
+    fontSize: 20,
     fontWeight: 'bold',
-    color: theme.colors.primary,
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(192, 67, 67, 0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
   },
   resultImage: {
     width: 100,
     height: 100,
-    marginTop: theme.spacing.small,
-    borderRadius: theme.borderRadius.medium,
+    marginTop: 10,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   resultText: {
-    fontFamily: theme.typography.body.fontFamily,
-    fontSize: theme.typography.body.fontSize,
-    color: theme.colors.text,
-    marginTop: theme.spacing.small,
+    fontFamily: 'Exo-font',
+    fontSize: 16,
+    color: '#FFFFFF',
+    marginTop: 10,
   },
   resultSubtitle: {
-    fontFamily: theme.typography.subtitle.fontFamily,
-    fontSize: theme.typography.subtitle.fontSize,
-    color: '#000000', // Updated to black
-    marginTop: theme.spacing.medium,
+    fontFamily: 'Exo-font',
+    fontSize: 18,
+    color: '#FFFFFF',
+    marginTop: 15,
+    textShadowColor: 'rgba(192, 67, 67, 0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
   },
   purchaseList: {
-    marginTop: theme.spacing.medium,
-    paddingHorizontal: theme.spacing.small,
+    marginTop: 15,
+    paddingHorizontal: 5,
   },
   purchaseCard: {
-    width: 100, // Reduced width from 120 to 100
-    marginRight: theme.spacing.medium,
+    width: 100,
+    marginRight: 15,
     borderWidth: 1,
-    borderColor: theme.colors.primary,
-    borderRadius: theme.borderRadius.medium,
-    padding: theme.spacing.small,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 5,
+    padding: 5,
     alignItems: 'center',
-    backgroundColor: theme.colors.background,
-    ...theme.shadow,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    shadowColor: '#C04343',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
   },
   purchaseCardInner: {
     width: '100%',
     alignItems: 'center',
   },
   purchaseThumbnail: {
-    width: 60, // Reduced from 80 to 60
-    height: 60, // Reduced from 80 to 60
-    borderRadius: theme.borderRadius.medium,
+    width: 60,
+    height: 60,
+    borderRadius: 5,
   },
   purchaseStore: {
-    fontFamily: theme.typography.body.fontFamily,
+    fontFamily: 'Exo-font',
     fontSize: 14,
-    color: theme.colors.text,
-    marginTop: theme.spacing.small,
+    color: '#FFFFFF',
+    marginTop: 5,
     textAlign: 'center',
   },
-  linkText: {
-    color: theme.colors.primary,
-    textDecorationLine: 'underline',
-  },
   feedbackPrompt: {
-    fontFamily: theme.typography.body.fontFamily,
-    fontSize: theme.typography.body.fontSize,
-    color: theme.colors.text,
-    marginTop: theme.spacing.large,
+    fontFamily: 'Exo-font',
+    fontSize: 16,
+    color: '#FFFFFF',
+    marginTop: 20,
   },
   feedbackButtons: {
     flexDirection: 'row',
-    marginTop: theme.spacing.medium,
+    marginTop: 10,
     justifyContent: 'space-between',
-    width: '50%',
+    width: '90%',
   },
   feedbackYes: {
-    backgroundColor: 'green', // Updated to green
-    padding: theme.spacing.medium,
-    borderRadius: theme.borderRadius.medium,
+    backgroundColor: '#000000',
+    padding: 15,
+    borderRadius: 5,
     alignItems: 'center',
     width: '45%',
-    ...theme.shadow,
+    shadowColor: '#C04343',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
   },
   feedbackNo: {
-    backgroundColor: '#000000', // Updated to black
-    padding: theme.spacing.medium,
-    borderRadius: theme.borderRadius.medium,
+    backgroundColor: '#000000',
+    padding: 15,
+    borderRadius: 5,
     alignItems: 'center',
     width: '45%',
-    ...theme.shadow,
+    shadowColor: '#C04343',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
   },
   feedbackMessage: {
-    fontFamily: theme.typography.body.fontFamily,
-    fontSize: theme.typography.body.fontSize,
-    color: theme.colors.text,
-    marginTop: theme.spacing.medium,
+    fontFamily: 'Exo-font',
+    fontSize: 16,
+    color: '#FFFFFF',
+    marginTop: 10,
   },
   input: {
-    width: '80%',
-    padding: theme.spacing.medium,
+    width: '90%',
+    padding: 15,
     borderWidth: 1,
-    borderColor: theme.colors.text,
-    borderRadius: theme.borderRadius.medium,
-    marginTop: theme.spacing.medium,
-    marginBottom: theme.spacing.medium,
-    fontFamily: theme.typography.body.fontFamily,
-    fontSize: theme.typography.body.fontSize,
-    color: theme.colors.text,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 5,
+    marginTop: 10,
+    marginBottom: 10,
+    fontFamily: 'Exo-font',
+    fontSize: 16,
+    color: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    shadowColor: '#C04343',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
+  },
+  glowOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 5,
+    backgroundColor: 'rgba(192, 67, 67, 0.3)',
+    shadowColor: '#C04343',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
   },
 });
 
