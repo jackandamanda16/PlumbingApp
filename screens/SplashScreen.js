@@ -33,7 +33,7 @@ const SplashScreen = ({ navigation }) => {
 
   return (
     <LinearGradient
-      colors={['#C04343', '#000000']}
+      colors={['#F5F7FA', '#EDEFF2']} // Off-white gradient
       style={styles.container}
     >
       <Reanimated.View style={[styles.content, animatedLogoStyle]}>
@@ -57,9 +57,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logo: {
-    width: 400,
-    height: 400,
-    shadowColor: '#C04343',
+    width: 300,
+    height: 300,
+    shadowColor: '#1A73E8', // Updated to blue shadow
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.8,
     shadowRadius: 10,
